@@ -1,36 +1,70 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-## Getting Started
+# 🚀 Web App Builder – Advanced Low-Code Platform
 
-First, run the development server:
+Welcome to the most advanced drag-and-drop web app builder, powered by [Next.js](https://nextjs.org) and the ultra-flexible [react-web-white-label](https://www.npmjs.com/package/react-web-white-label) UI kit! Build, preview, and export beautiful UIs with zero code. Perfect for rapid prototyping, MVPs, and enterprise-grade dashboards.
+
+---
+
+## ✨ Key Features
+
+🎨 **Drag & Drop UI** – Instantly compose interfaces from a rich palette of [react-web-white-label](https://www.npmjs.com/package/react-web-white-label) components: Buttons, Cards, Alerts, Tooltips, Navbars, Steppers, and more!
+
+🧩 **Multiple Grid Layouts** – Switch between single, double, triple column, or freeform (wrap) layouts. Responsive and flexible for any use case.
+
+🛠️ **Properties Panel** – Select any component to edit its props live (labels, icons, colors, etc). All changes are reflected in real time.
+
+📦 **Artifacts: JSON Import/Export** – Save your entire UI (including layout and all component props) as a portable JSON artifact. Import JSON to instantly restore or share your design.
+
+👀 **Live Preview** – See your app update as you build. No reloads, no waiting.
+
+🧑‍💻 **White Label Ready** – All UI elements are from `react-web-white-label`, making your artifacts compatible with any project using this library.
+
+---
+
+## ⚡️ Quick Start
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm dev # or npm run dev / yarn dev / bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) and start building!
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🏗️ How to Use
 
-## Learn More
+1. **Drag Components** from the left palette onto the canvas.
+2. **Change Layout** using the grid selector above the canvas (single, double, triple, freeform).
+3. **Edit Properties** in the right panel for any selected component.
+4. **Export JSON** to save your UI as an artifact, or **Import JSON** to restore/share a design (layout included!).
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 📝 JSON Artifact Example
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```json
+{
+	"layout": "triple",
+	"components": [
+		{ "name": "Button", "props": { "label": "🚀 Launch" } },
+		{ "name": "Card", "props": { "title": "Welcome", "content": "Drag and drop!" } },
+		{ "name": "Alert", "props": { "severity": "info", "message": "All changes saved!" } }
+	]
+}
+```
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🧩 Powered by react-web-white-label
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+All UI components are imported from [`react-web-white-label`](https://www.npmjs.com/package/react-web-white-label):
+
+- MWLButton, MWLCard, MWLAlert, MWLTooltip, MWLAvatar, MWLBadge, MWLChip, MWLDivider, MWLList, MWLStepper, MWLTransferList, MWLFileUploader, MWLTopNavbar, MWLSidebar, MWLFileList, MWLScrollSpy, MWLRichTextEditor, MWLImagePopupViewer, MWLPdfViewer, MWLIconography, MWLBreakPoints, MWLErrorBoundary, MWLLogin, MWLLoginBase, MWLOtpInput, MWLLogo, MWLSlidingPane, MWLThemes, MWLLayout, MWLMultiSelectAutocomplete, and more!
+
+You can add or remove components in `src/app/components/DragDropComponentPage.tsx` by editing the `availableComponents` array.
+
+---
+
+## 🛡️ License
+
+MIT License
