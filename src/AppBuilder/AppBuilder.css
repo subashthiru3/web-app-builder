@@ -1,0 +1,38 @@
+/* DraggableComponent styles */
+.draggable-component {
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+  background-color: #f1f5f9; /* slate-100 */
+  border: 1px solid #cbd5e1; /* slate-300 */
+  border-radius: 0.5rem;
+  cursor: move;
+  transition: background 0.2s, opacity 0.2s;
+}
+.draggable-component:hover {
+  background-color: #e2e8f0; /* slate-200 */
+}
+.draggable-component.dragging {
+  opacity: 0.5;
+}
+.draggable-component:not(.dragging) {
+  opacity: 1;
+}
+
+.draggable-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #334155; /* slate-700 */
+}
+/* BuilderApp styles */
+.builder-app-root {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #f1f5f9; /* bg-slate-100 */
+}
+
+.builder-app-main {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}

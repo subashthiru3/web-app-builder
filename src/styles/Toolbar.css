@@ -1,0 +1,62 @@
+/* Toolbar styles */
+.toolbar-root {
+  background: #fff;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 1.5rem 1.5rem 1.5rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.toolbar-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.toolbar-title {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #0f172a;
+}
+.toolbar-badge {
+  font-size: 0.875rem;
+  background: #dbeafe;
+  color: #1d4ed8;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+}
+.toolbar-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+.toolbar-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.toolbar-btn.export {
+  background: #2563eb;
+  color: #fff;
+}
+.toolbar-btn.export:hover {
+  background: #1d4ed8;
+}
+.toolbar-btn.import {
+  background: #334155;
+  color: #fff;
+}
+.toolbar-btn.import:hover {
+  background: #1e293b;
+}
+.toolbar-btn.clear {
+  background: #dc2626;
+  color: #fff;
+}
+.toolbar-btn.clear:hover {
+  background: #b91c1c;
+}

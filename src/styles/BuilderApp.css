@@ -1,0 +1,13 @@
+/* BuilderApp styles */
+.builder-app-root {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #f1f5f9; /* bg-slate-100 */
+}
+
+.builder-app-main {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}

@@ -1,0 +1,53 @@
+/* Canvas empty state message styles converted from Tailwind */
+.canvas-empty-message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+  color: #94a3b8; /* slate-400 */
+}
+.canvas-empty-title {
+  font-size: 1.125rem; /* text-lg */
+  font-weight: 500; /* font-medium */
+  margin-bottom: 0.5rem; /* mb-2 */
+}
+.canvas-empty-desc {
+  font-size: 0.875rem; /* text-sm */
+}
+/* Canvas component wrapper styles converted from Tailwind */
+.canvas-component-wrapper {
+  padding: 1rem;
+  border-width: 2px;
+  border-radius: 0.5rem;
+  transition: all 0.2s;
+  cursor: pointer;
+  border-color: #e5e7eb; /* slate-200 */
+}
+.canvas-component-wrapper:hover {
+  border-color: #cbd5e1; /* slate-300 */
+}
+.canvas-component-selected {
+  border-color: #3b82f6; /* blue-500 */
+  background-color: #eff6ff; /* blue-50 */
+}
+.canvas {
+  flex: 1;
+  background: #fff;
+  border: 2px dashed #cbd5e1;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  overflow-y: auto;
+  transition:
+    border-color 0.2s,
+    background 0.2s;
+}
+
+.canvasOver {
+  border-color: #3b82f6;
+  background: #eff6ff;
+}
+
+.canvasDefault {
+  border-color: #cbd5e1;
+}
