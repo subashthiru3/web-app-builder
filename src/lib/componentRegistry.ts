@@ -1,4 +1,4 @@
-import { ComponentType, DEFAULT_MWL_BUTTON_PROPS } from "./types";
+import { ComponentType, DEFAULT_MWL_BUTTON_PROPS, DEFAULT_MWL_GRID_PROPS } from "./types";
 
 export interface ComponentSchema {
   type: ComponentType;
@@ -24,6 +24,22 @@ export const componentRegistry: Record<ComponentType, ComponentSchema> = {
       "textTransform",
       "loading",
       "loadingPosition",
+    ],
+  },
+  mwlGrid: {
+    type: "mwlGrid",
+    label: "MWL Grid",
+    icon: "GridOn",
+    defaultProps: DEFAULT_MWL_GRID_PROPS,
+    editableFields: [
+      "rowData",
+      "columnData",
+      "className",
+      "rowsPerPageCount",
+      "showPagination",
+      "variant",
+      "listContent",
+      "reasonText",
     ],
   },
 };

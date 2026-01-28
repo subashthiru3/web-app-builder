@@ -1,11 +1,12 @@
 'use client';
 
 import { create } from 'zustand';
-import { useEffect } from 'react';
 import { CanvasComponent, CanvasState, ComponentType, ComponentProps } from './types';
 import { getComponentSchema } from './componentRegistry';
 
 interface BuilderStore extends CanvasState {
+  undoStack: Array<{ components: CanvasComponent[]; selectedComponentId: string | null }>;
+  redoStack: Array<{ components: CanvasComponent[]; selectedComponentId: string | null }>;
   addComponent: (type: ComponentType) => void;
   removeComponent: (id: string) => void;
   selectComponent: (id: string | null) => void;
@@ -14,6 +15,8 @@ interface BuilderStore extends CanvasState {
   duplicateComponent: (id: string) => void;
   exportJSON: () => string;
   importJSON: (json: string) => void;
+  undo: () => void;
+  redo: () => void;
 }
 
 // Simple UUID generation without external library
@@ -33,6 +36,8 @@ const getInitialComponents = () => {
 export const useBuilderStore = create<BuilderStore>((set, get) => ({
   components: getInitialComponents(),
   selectedComponentId: null,
+  undoStack: [],
+  redoStack: [],
 
   addComponent: (type: ComponentType) => {
     set((state) => {
@@ -45,6 +50,8 @@ export const useBuilderStore = create<BuilderStore>((set, get) => ({
       const updated = {
         components: [...state.components, newComponent],
         selectedComponentId: newComponent.id,
+        undoStack: [...(state.undoStack || []), { components: state.components, selectedComponentId: state.selectedComponentId }],
+        redoStack: [],
       };
       if (typeof window !== 'undefined') {
         localStorage.setItem('wab_components', JSON.stringify(updated.components));
@@ -59,6 +66,8 @@ export const useBuilderStore = create<BuilderStore>((set, get) => ({
         components: state.components.filter((c) => c.id !== id),
         selectedComponentId:
           state.selectedComponentId === id ? null : state.selectedComponentId,
+        undoStack: [...(state.undoStack || []), { components: state.components, selectedComponentId: state.selectedComponentId }],
+        redoStack: [],
       };
       if (typeof window !== 'undefined') {
         localStorage.setItem('wab_components', JSON.stringify(updated.components));
@@ -77,6 +86,8 @@ export const useBuilderStore = create<BuilderStore>((set, get) => ({
         components: state.components.map((c) =>
           c.id === id ? { ...c, props: { ...c.props, ...props } } : c
         ),
+        undoStack: [...(state.undoStack || []), { components: state.components, selectedComponentId: state.selectedComponentId }],
+        redoStack: [],
       };
       if (typeof window !== 'undefined') {
         localStorage.setItem('wab_components', JSON.stringify(updated.components));
@@ -90,10 +101,11 @@ export const useBuilderStore = create<BuilderStore>((set, get) => ({
       const newComponents = [...state.components];
       const [removed] = newComponents.splice(fromIndex, 1);
       newComponents.splice(toIndex, 0, removed);
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('wab_components', JSON.stringify(newComponents));
-      }
-      return { components: newComponents };
+      return {
+        components: newComponents,
+        undoStack: [...(state.undoStack || []), { components: state.components, selectedComponentId: state.selectedComponentId }],
+        redoStack: [],
+      };
     });
   },
 
@@ -108,11 +120,50 @@ export const useBuilderStore = create<BuilderStore>((set, get) => ({
       const updated = {
         components: [...state.components, newComponent],
         selectedComponentId: newComponent.id,
+        undoStack: [...(state.undoStack || []), { components: state.components, selectedComponentId: state.selectedComponentId }],
+        redoStack: [],
       };
       if (typeof window !== 'undefined') {
         localStorage.setItem('wab_components', JSON.stringify(updated.components));
       }
       return updated;
+    });
+  },
+  undo: () => {
+    set((state) => {
+      if (!state.undoStack || state.undoStack.length === 0) return state;
+      const prev = state.undoStack[state.undoStack.length - 1];
+      const newUndoStack = state.undoStack.slice(0, -1);
+      const newRedoStack = [...(state.redoStack || []), { components: state.components, selectedComponentId: state.selectedComponentId }];
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('wab_components', JSON.stringify(prev.components));
+      }
+      return {
+        ...state,
+        components: prev.components,
+        selectedComponentId: prev.selectedComponentId,
+        undoStack: newUndoStack,
+        redoStack: newRedoStack,
+      };
+    });
+  },
+
+  redo: () => {
+    set((state) => {
+      if (!state.redoStack || state.redoStack.length === 0) return state;
+      const next = state.redoStack[state.redoStack.length - 1];
+      const newRedoStack = state.redoStack.slice(0, -1);
+      const newUndoStack = [...(state.undoStack || []), { components: state.components, selectedComponentId: state.selectedComponentId }];
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('wab_components', JSON.stringify(next.components));
+      }
+      return {
+        ...state,
+        components: next.components,
+        selectedComponentId: next.selectedComponentId,
+        undoStack: newUndoStack,
+        redoStack: newRedoStack,
+      };
     });
   },
 

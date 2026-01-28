@@ -16,8 +16,8 @@ import RemoveRedEyeIcon from "@mui/icons-material/RemoveRedEye";
 import TabletAndroidIcon from "@mui/icons-material/TabletAndroid";
 import IosShareIcon from "@mui/icons-material/IosShare";
 import SaveIcon from "@mui/icons-material/Save";
-// import Undo from "@/components/organisms/MWLRichTextEditor/TextEditor-Assests/undo";
-// import Redo from "@/components/organisms/MWLRichTextEditor/TextEditor-Assests/redo";
+import undo from "../undo";
+import redo from "../redo";
 import { MWLSelectField, MWLButton } from "react-web-white-label";
 
 type ClipboardAction = "copy" | "cut" | null;
@@ -53,12 +53,16 @@ const IconWrapper: FC<{
 IconWrapper.displayName = "IconWrapper";
 
 import { useBuilderStore } from "@/lib/store";
+import Undo from "../undo";
+import Redo from "../redo";
 
 const SubHeader: FC = () => {
   const [clipboardAction, setClipboardAction] = useState<ClipboardAction>(null);
   const [copiedContent, setCopiedContent] = useState<string | null>(null);
   const exportJSON = useBuilderStore((state) => state.exportJSON);
   const importJSON = useBuilderStore((state) => state.importJSON);
+  const undo = useBuilderStore((state) => state.undo);
+  const redo = useBuilderStore((state) => state.redo);
 
   // Dialog state for preview/edit JSON
   const [jsonDialogOpen, setJsonDialogOpen] = useState(false);
@@ -127,14 +131,12 @@ const SubHeader: FC = () => {
   }, []);
 
   const handleUndo = useCallback(() => {
-    console.log("Undo clicked");
-    // Add your undo logic here
-  }, []);
+    undo();
+  }, [undo]);
 
   const handleRedo = useCallback(() => {
-    console.log("Redo clicked");
-    // Add your redo logic here
-  }, []);
+    redo();
+  }, [redo]);
 
   const handleCopy = useCallback(() => {
     console.log("Copy clicked");
@@ -207,10 +209,10 @@ const SubHeader: FC = () => {
               <SettingsIcon sx={iconStyle} />
             </IconWrapper>
             <IconWrapper onClick={handleUndo}>
-              <SettingsIcon sx={iconStyle} />
+              <Undo color="#757575" />
             </IconWrapper>
             <IconWrapper onClick={handleRedo}>
-              <SettingsIcon sx={iconStyle} />
+              <Redo color="#757575" />
             </IconWrapper>
             <IconWrapper onClick={handleCopy}>
               <ContentCopyIcon sx={iconStyle} />

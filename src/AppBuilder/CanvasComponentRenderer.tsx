@@ -1,8 +1,8 @@
 "use client";
 
-import React from "react";
+import * as React from "react";
 import { CanvasComponent, MWLButtonProps } from "@/lib/types";
-import { MWLButton } from "react-web-white-label";
+import { MWLButton, MWLGrid } from "react-web-white-label";
 
 interface CanvasComponentRendererProps {
   component: CanvasComponent;
@@ -16,7 +16,9 @@ export const CanvasComponentRenderer: React.FC<
 
   switch (component.type) {
     case "mwlButton": {
-      const props = component.props as Partial<MWLButtonProps>;
+      const props = (
+        Array.isArray(component.props) ? component.props[0] : component.props
+      ) as Partial<MWLButtonProps>;
 
       return (
         <MWLButton
@@ -36,6 +38,22 @@ export const CanvasComponentRenderer: React.FC<
           dataTestid={props.dataTestid}
         />
       );
+    }
+    case "mwlGrid": {
+      // Ensure every row has a unique id
+      const props = { ...component.props };
+      if (Array.isArray(props.rowData)) {
+        props.rowData = props.rowData.map((row: any, idx: number) => {
+          if (
+            row &&
+            (row.id === undefined || row.id === null || row.id === "")
+          ) {
+            return { ...row, id: idx + 1 };
+          }
+          return row;
+        });
+      }
+      return <MWLGrid {...props} />;
     }
 
     default:

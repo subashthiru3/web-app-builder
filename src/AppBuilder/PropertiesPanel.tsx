@@ -78,8 +78,28 @@ export const PropertiesPanel: React.FC = () => {
                 value={fieldValue}
                 onChange={(value) => {
                   console.log("[WAB] Updating", fieldName, "to", value);
-                  updateComponentProps(selectedComponentId, {
-                    [fieldName]: value,
+                  // Special handling for grid rowData to ensure unique ids and valid array
+                  let newValue = value;
+                  if (fieldName === "rowData") {
+                    if (Array.isArray(value)) {
+                      newValue = value.map((row: any, idx: number) => {
+                        if (
+                          row &&
+                          (row.id === undefined ||
+                            row.id === null ||
+                            row.id === "")
+                        ) {
+                          return { ...row, id: idx + 1 };
+                        }
+                        return row;
+                      });
+                    } else {
+                      // If not a valid array, do not update
+                      return;
+                    }
+                  }
+                  updateComponentProps(selectedComponentId!, {
+                    [fieldName]: newValue,
                   });
                 }}
                 componentType={selectedComponent.type}

@@ -282,6 +282,32 @@ export const PropertyEditor: React.FC<PropertyEditorProps> = ({
       );
     }
 
+    // Special handling for grid rowData/columnData fields
+    if (
+      (fieldName === "rowData" || fieldName === "columnData") &&
+      Array.isArray(value)
+    ) {
+      return (
+        <MuiTextField
+          value={JSON.stringify(value, null, 2)}
+          onChange={(e) => {
+            try {
+              const parsed = JSON.parse(e.target.value);
+              onChange(parsed);
+            } catch {
+              onChange(e.target.value); // fallback to raw string if not valid JSON
+            }
+          }}
+          size="small"
+          fullWidth
+          multiline
+          minRows={3}
+          maxRows={10}
+          placeholder={fieldName === "rowData" ? "[{\"id\":1,...}]" : "[{\"field\":\"id\",...}]"}
+        />
+      );
+    }
+
     // Default text input
     return (
       <MuiTextField
