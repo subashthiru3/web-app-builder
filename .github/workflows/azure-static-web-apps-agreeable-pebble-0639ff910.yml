@@ -28,10 +28,6 @@ jobs:
         env:
           AZURE_DEVOPS_PAT: ${{ secrets.AZURE_DEVOPS_PAT }}
 
-      # 🧪 Optional but VERY helpful (remove after success)
-      - name: Verify npm auth
-        run: npm whoami --registry=https://pkgs.dev.azure.com/MHPortfolio/_packaging/DPS/npm/registry/
-
       # 🚀 Build & Deploy
       - name: Build And Deploy
         uses: Azure/static-web-apps-deploy@v1
