@@ -5,6 +5,8 @@ module.exports = {
     "react-dnd-html5-backend",
     "prismjs",
   ],
+  output: "export",
+  images: { unoptimized: true },
   experimental: {
     turbopack: true,
   },

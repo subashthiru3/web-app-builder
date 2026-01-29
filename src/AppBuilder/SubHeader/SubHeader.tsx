@@ -16,9 +16,11 @@ import RemoveRedEyeIcon from "@mui/icons-material/RemoveRedEye";
 import TabletAndroidIcon from "@mui/icons-material/TabletAndroid";
 import IosShareIcon from "@mui/icons-material/IosShare";
 import SaveIcon from "@mui/icons-material/Save";
-import undo from "../undo";
-import redo from "../redo";
 import { MWLSelectField, MWLButton } from "react-web-white-label";
+import { useBuilderStore } from "@/lib/store";
+import Undo from "../undo";
+import Redo from "../redo";
+import { deployApp, saveData } from "@/api";
 
 type ClipboardAction = "copy" | "cut" | null;
 
@@ -51,10 +53,6 @@ const IconWrapper: FC<{
 ));
 
 IconWrapper.displayName = "IconWrapper";
-
-import { useBuilderStore } from "@/lib/store";
-import Undo from "../undo";
-import Redo from "../redo";
 
 const SubHeader: FC = () => {
   const [clipboardAction, setClipboardAction] = useState<ClipboardAction>(null);
@@ -175,9 +173,25 @@ const SubHeader: FC = () => {
     console.log("Selected:", value);
   }, []);
 
-  const handleSave = useCallback(() => {
-    console.log("Save clicked");
-  }, []);
+  const handleSave = async () => {
+    if (jsonText) {
+      const response = await saveData(jsonText);
+      if (response.status === 200) {
+        alert(response.data?.message);
+      }
+    } else {
+      console.log("No JSON data to save");
+    }
+  };
+
+  const handleDeploy = async () => {
+    const response = await deployApp("sample-project");
+    if (response.status === 200) {
+      console.log("Deployment initiated:", response);
+    } else {
+      console.log("Deployment failed");
+    }
+  };
 
   // Handler to open preview in new tab
   const handlePreview = useCallback(() => {
@@ -336,6 +350,12 @@ const SubHeader: FC = () => {
               variant="contained"
               startIcon={<SaveIcon />}
               handleClick={handleSave}
+            />
+            <MWLButton
+              text="Deploy"
+              color="success"
+              variant="outlined"
+              handleClick={handleDeploy}
             />
           </div>
         </div>

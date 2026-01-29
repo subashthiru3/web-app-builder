@@ -1,28 +1,12 @@
-"use client";
-
-
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { CanvasComponent } from "@/lib/types";
 import { CanvasComponentRenderer } from "@/AppBuilder/CanvasComponentRenderer";
 
+// 🔑 build-time JSON import
+import pageJson from "@/runtime/page.json";
 
-const PreviewPage: React.FC = () => {
-  const [components, setComponents] = useState<CanvasComponent[]>([]);
-
-  useEffect(() => {
-    const load = () => {
-      try {
-        const stored = localStorage.getItem("wab_components");
-        if (stored) setComponents(JSON.parse(stored));
-        else setComponents([]);
-      } catch {
-        setComponents([]);
-      }
-    };
-    load();
-    window.addEventListener("storage", load);
-    return () => window.removeEventListener("storage", load);
-  }, []);
+const PreviewPage = () => {
+  const components = pageJson as CanvasComponent[];
 
   return (
     <div style={{ padding: 32 }}>

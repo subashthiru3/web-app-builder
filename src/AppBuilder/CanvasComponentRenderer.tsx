@@ -12,8 +12,6 @@ export const CanvasComponentRenderer: React.FC<
   CanvasComponentRendererProps
 > = ({ component }) => {
   // Debug log to verify props are being passed
-  console.log("[WAB] Rendering component:", component.type, component.props);
-
   switch (component.type) {
     case "mwlButton": {
       const props = (

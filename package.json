@@ -17,6 +17,7 @@
     "@mui/material": "^7.3.7",
     "@mui/x-data-grid": "^8.24.0",
     "@mui/x-data-grid-premium": "^8.24.0",
+    "axios": "^1.13.4",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
     "lucide-react": "^0.563.0",
