@@ -22,6 +22,15 @@ jobs:
         with:
           submodules: true
           lfs: false
+      - name: Authenticate npm to Azure DevOps Artifacts
+        run: |
+          echo "registry=https://pkgs.dev.azure.com/MHPortfolio/_packaging/DPS/npm/registry/" > ~/.npmrc
+          echo "always-auth=true" >> ~/.npmrc
+          echo "//pkgs.dev.azure.com/MHPortfolio/_packaging/DPS/npm/registry/:username=azure" >> ~/.npmrc
+          echo "//pkgs.dev.azure.com/MHPortfolio/_packaging/DPS/npm/registry/:_password=$(echo -n $AZURE_DEVOPS_PAT | base64)" >> ~/.npmrc
+          echo "//pkgs.dev.azure.com/MHPortfolio/_packaging/DPS/npm/registry/:email=unused@azure.devops" >> ~/.npmrc
+        env:
+          AZURE_DEVOPS_PAT: ${{ secrets.AZURE_DEVOPS_PAT }}
       - name: Install OIDC Client from Core Package
         run: npm install @actions/core@1.6.0 @actions/http-client
       - name: Get Id Token
