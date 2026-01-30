@@ -184,12 +184,27 @@ const SubHeader: FC = () => {
     }
   };
 
+  // const handleDeploy = async () => {
+  //   const response = await deployApp("sample-project");
+  //   if (response.status === 200) {
+  //     console.log("Deployment initiated:", response);
+  //   } else {
+  //     console.log("Deployment failed");
+  //   }
+  // };
+
   const handleDeploy = async () => {
-    const response = await deployApp("sample-project");
-    if (response.status === 200) {
-      console.log("Deployment initiated:", response);
+    alert("Deployment started… ⏳");
+
+    const res = await fetch("/api/deploy", { method: "POST" });
+    const data = await res.json();
+
+    if (data.success) {
+      alert(data.url);
+      navigator.clipboard.writeText(data.url);
+      alert("Production deploy triggered & URL copied 🚀");
     } else {
-      console.log("Deployment failed");
+      alert("Failed ❌");
     }
   };
 

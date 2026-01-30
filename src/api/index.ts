@@ -4,7 +4,7 @@ const apiUrl = process.env.NEXT_API_BASE_URL || "http://localhost:4000/api/";
 
 export const saveData = async (data: any) => {
   let payload = {
-    projectName: "sample-project",
+    projectName: "sample-grid",
     pageJson: data,
   };
   try {

@@ -1,22 +1,21 @@
 name: Azure Static Web Apps CI/CD
 
 on:
-  push:
-    branches:
-      - feature/deployment
-  pull_request:
-    types: [opened, synchronize, reopened, closed]
-    branches:
-      - feature/deployment
+  workflow_dispatch:
 
 jobs:
   build_and_deploy_job:
-    if: github.event_name != 'pull_request' || github.event.action != 'closed'
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
-
+    name: Build and Deploy Job
+    permissions:
+      id-token: write
+      contents: read
     steps:
       - uses: actions/checkout@v3
-
+        with:
+          submodules: true
+          lfs: false
       # 🔐 Azure DevOps Artifacts npm auth (CORRECT)
       - name: Authenticate npm to Azure DevOps Artifacts
         run: |
@@ -27,22 +26,26 @@ jobs:
           EOF
         env:
           AZURE_DEVOPS_PAT: ${{ secrets.AZURE_DEVOPS_PAT }}
-
-      # 🚀 Build & Deploy
+      - name: Install OIDC Client from Core Package
+        run: npm install @actions/core@1.6.0 @actions/http-client
+      - name: Get Id Token
+        uses: actions/github-script@v6
+        id: idtoken
+        with:
+          script: |
+            const coredemo = require('@actions/core')
+            return await coredemo.getIDToken()
+          result-encoding: string
       - name: Build And Deploy
+        id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
         with:
-          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
-          action: upload
-          app_location: "/"
-          output_location: "out"
-
-  close_pull_request_job:
-    if: github.event_name == 'pull_request' && github.event.action == 'closed'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Close Pull Request
-        uses: Azure/static-web-apps-deploy@v1
-        with:
-          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
-          action: close
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_AGREEABLE_PEBBLE_0639FF910 }}
+          action: "upload"
+          ###### Repository/Build Configurations - These values can be configured to match your app requirements. ######
+          # For more information regarding Static Web App workflow configurations, please visit: https://aka.ms/swaworkflowconfig
+          app_location: "/" # App source code path
+          api_location: "api" # Api source code path - optional
+          output_location: "out" # Built app content directory - optional
+          github_id_token: ${{ steps.idtoken.outputs.result }}
+          ###### End of Repository/Build Configurations ######
