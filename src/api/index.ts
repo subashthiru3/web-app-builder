@@ -27,12 +27,11 @@ export const loadData = async (projectName: string) => {
 };
 
 export const deployApp = async (projectName: string) => {
-  const payload = {
-    projectName: projectName,
-  };
   try {
-    const response = await axios.post(`${apiUrl}deploy`, payload);
-    return response;
+    const response = await axios.post(`${apiUrl}deploy`, {
+      projectName,
+    });
+    return response.data;
   } catch (error) {
     console.error("Error deploying app:", error);
     throw error;

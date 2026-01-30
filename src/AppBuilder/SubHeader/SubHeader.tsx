@@ -194,19 +194,29 @@ const SubHeader: FC = () => {
   // };
 
   const handleDeploy = async () => {
-    alert("Deployment started… ⏳");
-
-    const res = await fetch("/api/deploy", { method: "POST" });
-    const data = await res.json();
-
-    if (data.success) {
-      alert(data.url);
-      navigator.clipboard.writeText(data.url);
-      alert("Production deploy triggered & URL copied 🚀");
-    } else {
-      alert("Failed ❌");
+    try {
+      const response = await deployApp("sample-project");
+      alert("🚀 Deployment started");
+      console.log("Deployment response:", response);
+    } catch {
+      alert("❌ Deployment failed");
     }
   };
+
+  // const handleDeploy = async () => {
+  //   alert("Deployment started… ⏳");
+
+  //   const res = await fetch("/api/deploy", { method: "POST" });
+  //   const data = await res.json();
+
+  //   if (data.success) {
+  //     alert(data.url);
+  //     navigator.clipboard.writeText(data.url);
+  //     alert("Production deploy triggered & URL copied 🚀");
+  //   } else {
+  //     alert("Failed ❌");
+  //   }
+  // };
 
   // Handler to open preview in new tab
   const handlePreview = useCallback(() => {
