@@ -22,19 +22,26 @@ export const Canvas: React.FC = () => {
     }),
   }));
 
+  const divRef = React.useRef<HTMLDivElement>(null);
+  React.useEffect(() => {
+    if (divRef.current) {
+      drop(divRef.current);
+    }
+  }, [drop]);
+
   return (
     <div
-      ref={drop}
+      ref={divRef}
       className={`canvas ${isOver ? "canvasOver" : "canvasDefault"}`}
     >
-      <div
-        className={`canvas-inner ${isOver ? "canvas-inner-over" : ""}`}
-      >
+      <div className={`canvas-inner ${isOver ? "canvas-inner-over" : ""}`}>
         {components.length === 0 ? (
           <div className="canvas-empty-message">
             <div>
               <p className="canvas-empty-title">Drop components here</p>
-              <p className="canvas-empty-desc">Drag components from the left sidebar</p>
+              <p className="canvas-empty-desc">
+                Drag components from the left sidebar
+              </p>
             </div>
           </div>
         ) : (
@@ -43,7 +50,9 @@ export const Canvas: React.FC = () => {
               <div
                 key={component.id}
                 className={`canvas-component-wrapper${
-                  selectedComponentId === component.id ? " canvas-component-selected" : ""
+                  selectedComponentId === component.id
+                    ? " canvas-component-selected"
+                    : ""
                 }`}
                 onClick={() => selectComponent(component.id)}
               >

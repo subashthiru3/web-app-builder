@@ -3,7 +3,7 @@ import axios from "axios";
 const apiUrl = process.env.NEXT_API_BASE_URL || "http://localhost:4000/api/";
 
 export const saveData = async (data: any) => {
-  let payload = {
+  const payload = {
     projectName: "sample-grid",
     pageJson: data,
   };
@@ -27,7 +27,7 @@ export const loadData = async (projectName: string) => {
 };
 
 export const deployApp = async (projectName: string) => {
-  let payload = {
+  const payload = {
     projectName: projectName,
   };
   try {
