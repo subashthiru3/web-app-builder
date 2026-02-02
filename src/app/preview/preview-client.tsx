@@ -7,7 +7,7 @@ import { CanvasComponent } from "@/lib/types";
 
 export default function PreviewClient() {
   const searchParams = useSearchParams();
-  const project = searchParams.get("project");
+  const project = searchParams?.get("project");
 
   const [components, setComponents] = useState<CanvasComponent[]>([]);
 
