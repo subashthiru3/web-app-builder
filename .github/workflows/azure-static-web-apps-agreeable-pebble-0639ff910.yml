@@ -22,15 +22,6 @@ jobs:
         with:
           node-version: "20.9.0"
 
-      - name: Get Id Token
-        uses: actions/github-script@v6
-        id: idtoken
-        with:
-          script: |
-            const coredemo = require('@actions/core')
-            return await coredemo.getIDToken()
-          result-encoding: string
-
       # 🔐 Azure DevOps Artifacts npm auth (CORRECT)
       - name: Authenticate npm to Azure DevOps Artifacts
         run: |
@@ -53,6 +44,15 @@ jobs:
 
       - name: Build Next.js app
         run: pnpm build
+
+      - name: Get Id Token
+        uses: actions/github-script@v6
+        id: idtoken
+        with:
+          script: |
+            const coredemo = require('@actions/core')
+            return await coredemo.getIDToken()
+          result-encoding: string
 
       - name: Build And Deploy
         id: builddeploy
