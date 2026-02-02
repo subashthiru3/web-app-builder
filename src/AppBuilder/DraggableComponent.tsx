@@ -13,7 +13,7 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
   type,
   label,
 }) => {
-  const [{ isDragging }, drag, preview] = useDrag(() => ({
+  const [{ isDragging }, drag] = useDrag(() => ({
     type: "component",
     item: { type },
     collect: (monitor) => ({

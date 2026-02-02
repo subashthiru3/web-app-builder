@@ -3,13 +3,7 @@
 import React from "react";
 import "../styles/PropertyEditor.css";
 import { ComponentType } from "@/lib/types";
-import {
-  Select,
-  MenuItem,
-  TextField as MuiTextField,
-  FormControlLabel,
-  Checkbox,
-} from "@mui/material";
+import { Select, MenuItem, TextField as MuiTextField } from "@mui/material";
 
 interface PropertyEditorProps {
   fieldName: string;

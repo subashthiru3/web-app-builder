@@ -87,6 +87,7 @@ const SubHeader: FC = () => {
       setJsonError("");
     } catch (err) {
       setJsonError("Invalid JSON");
+      console.error("Failed to import JSON:", err);
     }
   }, [importJSON, jsonText]);
 
@@ -220,7 +221,7 @@ const SubHeader: FC = () => {
 
   // Handler to open preview in new tab
   const handlePreview = useCallback(() => {
-    window.open("/preview", "_blank");
+    window.open("/preview?project=sample-project", "_blank");
   }, []);
 
   // Memoized values
@@ -304,7 +305,7 @@ const SubHeader: FC = () => {
                 const input = document.createElement("input");
                 input.type = "file";
                 input.accept = ".json,application/json";
-                input.onchange = (e) => {
+                input.onchange = () => {
                   const file = input.files?.[0];
                   if (!file) return;
                   const reader = new FileReader();
@@ -314,6 +315,7 @@ const SubHeader: FC = () => {
                       importJSON(json);
                     } catch (err) {
                       alert("Invalid JSON file.");
+                      console.error("Failed to import JSON from file:", err);
                     }
                   };
                   reader.readAsText(file);
