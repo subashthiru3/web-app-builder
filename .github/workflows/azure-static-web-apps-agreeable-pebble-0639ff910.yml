@@ -50,8 +50,8 @@ jobs:
         id: idtoken
         with:
           script: |
-            const coredemo = require('@actions/core')
-            return await coredemo.getIDToken()
+            const id_token = await core.getIDToken();
+            return id_token;
           result-encoding: string
 
       - name: Build Next.js app
