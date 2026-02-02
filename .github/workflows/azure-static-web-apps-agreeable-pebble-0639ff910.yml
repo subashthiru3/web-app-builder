@@ -19,6 +19,9 @@ jobs:
     steps:
       - name: "Checkout repository"
         uses: actions/checkout@v3
+        with:
+          submodules: true
+          lfs: false
 
       - name: Setup Node.js 20
         uses: actions/setup-node@v4
@@ -36,26 +39,16 @@ jobs:
         env:
           AZURE_DEVOPS_PAT: ${{ secrets.AZURE_DEVOPS_PAT }}
 
-      - name: Enable Corepack (pnpm)
-        run: corepack enable
-
-      - name: Prepare pnpm
-        run: corepack prepare pnpm@9 --activate
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
+      - name: Install OIDC Client from Core Package
+        run: npm install @actions/core@1.6.0 @actions/http-client
       - name: Get Id Token
         uses: actions/github-script@v6
         id: idtoken
         with:
           script: |
-            const id_token = await core.getIDToken();
-            return id_token;
+            const coredemo = require('@actions/core')
+            return await coredemo.getIDToken()
           result-encoding: string
-
-      - name: Build Next.js app
-        run: pnpm build
 
       - name: Debug build output
         run: |
@@ -68,6 +61,7 @@ jobs:
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_AGREEABLE_PEBBLE_0639FF910 }}
           action: "upload"
-          app_location: "out"
-          skip_app_build: true
+          app_location: "/"
+          output_location: "out"
+          skip_app_build: false
           github_id_token: ${{ steps.idtoken.outputs.result }}
