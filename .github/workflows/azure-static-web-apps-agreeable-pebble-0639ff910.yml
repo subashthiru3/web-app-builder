@@ -68,5 +68,3 @@ jobs:
           output_location: ""
           skip_app_build: true
           github_id_token: ${{ steps.idtoken.outputs.result }}
-        env:
-          IS_STATIC_EXPORT: true
