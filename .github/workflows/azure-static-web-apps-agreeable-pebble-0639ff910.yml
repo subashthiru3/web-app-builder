@@ -16,6 +16,9 @@ jobs:
     steps:
       - name: "Checkout repository"
         uses: actions/checkout@v3
+        with:
+          submodules: true
+          lfs: false
 
       - name: Setup Node.js 20
         uses: actions/setup-node@v4
@@ -42,6 +45,15 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Get Id Token
+        uses: actions/github-script@v6
+        id: idtoken
+        with:
+          script: |
+            const coredemo = require('@actions/core')
+            return await coredemo.getIDToken()
+          result-encoding: string
+
       - name: Build Next.js app
         run: pnpm build
 
@@ -55,3 +67,4 @@ jobs:
           api_location: "api"
           output_location: "out"
           skip_app_build: true
+          github_id_token: ${{ steps.idtoken.outputs.result }}
