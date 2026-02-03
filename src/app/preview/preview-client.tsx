@@ -27,14 +27,15 @@ export default function PreviewClient() {
           return;
         }
 
-        // ⭐ Production / API preview
         const res = await loadData(project);
         if (res) {
-          const data: any = res;
+          const data: any = res.data;
           setComponents(data);
         } else {
           throw new Error("Failed to load");
         }
+
+        // ⭐ Production / API preview
       } catch (err) {
         console.error(err);
         setComponents([]);
