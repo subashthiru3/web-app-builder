@@ -1,23 +1,6 @@
 [
   {
-    "id": "k1jzp61v7",
-    "type": "mwlButton",
-    "props": {
-      "type": "normal",
-      "text": "MWL Button",
-      "variant": "contained",
-      "color": "primary",
-      "size": "medium",
-      "disabled": false,
-      "borderRadius": 4,
-      "className": "mwl-button",
-      "textTransform": "none",
-      "loading": false,
-      "loadingPosition": "center"
-    }
-  },
-  {
-    "id": "w9z27crwu",
+    "id": "oqpt5c4mb",
     "type": "mwlGrid",
     "props": {
       "columnData": [
