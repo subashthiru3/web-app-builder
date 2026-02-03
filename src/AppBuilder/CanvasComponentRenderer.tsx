@@ -12,8 +12,6 @@ export const CanvasComponentRenderer: React.FC<
   CanvasComponentRendererProps
 > = ({ component }) => {
   // Debug log to verify props are being passed
-  console.log("[WAB] Rendering component:", component.type, component.props);
-
   switch (component.type) {
     case "mwlButton": {
       const props = (
@@ -41,7 +39,7 @@ export const CanvasComponentRenderer: React.FC<
     }
     case "mwlGrid": {
       // Ensure every row has a unique id
-      const props = { ...component.props };
+      const props = { ...(component.props as any) };
       if (Array.isArray(props.rowData)) {
         props.rowData = props.rowData.map((row: any, idx: number) => {
           if (

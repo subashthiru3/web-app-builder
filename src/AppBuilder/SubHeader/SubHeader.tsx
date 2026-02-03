@@ -16,9 +16,11 @@ import RemoveRedEyeIcon from "@mui/icons-material/RemoveRedEye";
 import TabletAndroidIcon from "@mui/icons-material/TabletAndroid";
 import IosShareIcon from "@mui/icons-material/IosShare";
 import SaveIcon from "@mui/icons-material/Save";
-import undo from "../undo";
-import redo from "../redo";
 import { MWLSelectField, MWLButton } from "react-web-white-label";
+import { useBuilderStore } from "@/lib/store";
+import Undo from "../undo";
+import Redo from "../redo";
+import { deployApp, saveData } from "@/api";
 
 type ClipboardAction = "copy" | "cut" | null;
 
@@ -51,10 +53,6 @@ const IconWrapper: FC<{
 ));
 
 IconWrapper.displayName = "IconWrapper";
-
-import { useBuilderStore } from "@/lib/store";
-import Undo from "../undo";
-import Redo from "../redo";
 
 const SubHeader: FC = () => {
   const [clipboardAction, setClipboardAction] = useState<ClipboardAction>(null);
@@ -89,6 +87,7 @@ const SubHeader: FC = () => {
       setJsonError("");
     } catch (err) {
       setJsonError("Invalid JSON");
+      console.error("Failed to import JSON:", err);
     }
   }, [importJSON, jsonText]);
 
@@ -175,13 +174,54 @@ const SubHeader: FC = () => {
     console.log("Selected:", value);
   }, []);
 
-  const handleSave = useCallback(() => {
-    console.log("Save clicked");
-  }, []);
+  const handleSave = async () => {
+    if (jsonText) {
+      const response = await saveData(jsonText);
+      if (response.status === 200) {
+        alert(response.data?.message);
+      }
+    } else {
+      console.log("No JSON data to save");
+    }
+  };
+
+  // const handleDeploy = async () => {
+  //   const response = await deployApp("sample-project");
+  //   if (response.status === 200) {
+  //     console.log("Deployment initiated:", response);
+  //   } else {
+  //     console.log("Deployment failed");
+  //   }
+  // };
+
+  const handleDeploy = async () => {
+    try {
+      const response = await deployApp("sample-project");
+      alert("🚀 Deployment started");
+      console.log("Deployment response:", response);
+    } catch {
+      alert("❌ Deployment failed");
+    }
+  };
+
+  // const handleDeploy = async () => {
+  //   alert("Deployment started… ⏳");
+
+  //   const res = await fetch("/api/deploy", { method: "POST" });
+  //   const data = await res.json();
+
+  //   if (data.success) {
+  //     alert(data.url);
+  //     navigator.clipboard.writeText(data.url);
+  //     alert("Production deploy triggered & URL copied 🚀");
+  //   } else {
+  //     alert("Failed ❌");
+  //   }
+  // };
 
   // Handler to open preview in new tab
   const handlePreview = useCallback(() => {
-    window.open("/preview", "_blank");
+    window.open("/preview?project=sample-project", "_blank");
   }, []);
 
   // Memoized values
@@ -265,7 +305,7 @@ const SubHeader: FC = () => {
                 const input = document.createElement("input");
                 input.type = "file";
                 input.accept = ".json,application/json";
-                input.onchange = (e) => {
+                input.onchange = () => {
                   const file = input.files?.[0];
                   if (!file) return;
                   const reader = new FileReader();
@@ -275,6 +315,7 @@ const SubHeader: FC = () => {
                       importJSON(json);
                     } catch (err) {
                       alert("Invalid JSON file.");
+                      console.error("Failed to import JSON from file:", err);
                     }
                   };
                   reader.readAsText(file);
@@ -336,6 +377,12 @@ const SubHeader: FC = () => {
               variant="contained"
               startIcon={<SaveIcon />}
               handleClick={handleSave}
+            />
+            <MWLButton
+              text="Deploy"
+              color="success"
+              variant="outlined"
+              handleClick={handleDeploy}
             />
           </div>
         </div>

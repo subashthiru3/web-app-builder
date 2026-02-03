@@ -1,0 +1,61 @@
+name: Azure Static Web Apps CI/CD
+
+on:
+  push:
+    branches:
+      - feature/deployment
+  pull_request:
+    branches:
+      - feature/deployment
+
+jobs:
+  build_and_deploy_job:
+    runs-on: ubuntu-latest
+    name: Build and Deploy Job
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: "Checkout repository"
+        uses: actions/checkout@v3
+        with:
+          submodules: true
+          lfs: false
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.9.0"
+
+      # 🔐 Azure DevOps Artifacts npm auth (CORRECT)
+      - name: Authenticate npm to Azure DevOps Artifacts
+        run: |
+          cat <<EOF > ~/.npmrc
+          registry=https://pkgs.dev.azure.com/MHPortfolio/_packaging/DPS/npm/registry/
+          always-auth=true
+          //pkgs.dev.azure.com/MHPortfolio/_packaging/DPS/npm/registry/:_authToken=${AZURE_DEVOPS_PAT}
+          EOF
+        env:
+          AZURE_DEVOPS_PAT: ${{ secrets.AZURE_DEVOPS_PAT }}
+
+      - name: Install OIDC Client from Core Package
+        run: npm install @actions/core@1.6.0 @actions/http-client
+      - name: Get Id Token
+        uses: actions/github-script@v6
+        id: idtoken
+        with:
+          script: |
+            const coredemo = require('@actions/core')
+            return await coredemo.getIDToken()
+          result-encoding: string
+
+      - name: Build And Deploy
+        id: builddeploy
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_AGREEABLE_PEBBLE_0639FF910 }}
+          action: "upload"
+          app_location: "/"
+          output_location: "out"
+          github_id_token: ${{ steps.idtoken.outputs.result }}
