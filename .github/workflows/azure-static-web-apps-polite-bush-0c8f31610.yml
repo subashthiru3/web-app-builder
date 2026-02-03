@@ -1,10 +1,6 @@
 name: Azure Static Web Apps CI/CD
 
 on:
-  push:
-    branches:
-      - master
-
   workflow_dispatch:
     inputs:
       project:
@@ -25,6 +21,16 @@ jobs:
         with:
           submodules: true
           lfs: false
+
+      - name: Cache node modules
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.npm
+            node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json', '**/pnpm-lock.yaml', '**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
 
       - name: Setup Node.js 20
         uses: actions/setup-node@v4

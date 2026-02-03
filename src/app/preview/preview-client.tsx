@@ -4,29 +4,60 @@ import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { CanvasComponentRenderer } from "@/AppBuilder/CanvasComponentRenderer";
 import { CanvasComponent } from "@/lib/types";
+import { loadData } from "@/api";
 
 export default function PreviewClient() {
   const searchParams = useSearchParams();
   const project = searchParams?.get("project");
 
   const [components, setComponents] = useState<CanvasComponent[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!project) return;
 
-    fetch(`/runtime/${project}/page.json`)
-      .then((res) => res.json())
-      .then(setComponents)
-      .catch(() => setComponents([]));
+    const load = async () => {
+      try {
+        // ⭐ Local preview fallback
+        const local = localStorage.getItem("wab_components");
+
+        if (local) {
+          setComponents(JSON.parse(local));
+          setLoading(false);
+          return;
+        }
+
+        // ⭐ Production / API preview
+        const res = await loadData(project);
+        if (res) {
+          const data: any = res;
+          setComponents(data);
+        } else {
+          throw new Error("Failed to load");
+        }
+      } catch (err) {
+        console.error(err);
+        setComponents([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    load();
   }, [project]);
 
   if (!project) return <div>No project specified</div>;
+  if (loading) return <div>Loading preview...</div>;
 
   return (
     <div style={{ padding: 32 }}>
-      {components.map((c) => (
-        <CanvasComponentRenderer key={c.id} component={c} />
-      ))}
+      {components.length === 0 ? (
+        <div>No components to preview</div>
+      ) : (
+        components.map((c) => (
+          <CanvasComponentRenderer key={c.id} component={c} />
+        ))
+      )}
     </div>
   );
 }
