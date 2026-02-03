@@ -57,6 +57,7 @@ IconWrapper.displayName = "IconWrapper";
 const SubHeader: FC = () => {
   const [clipboardAction, setClipboardAction] = useState<ClipboardAction>(null);
   const [copiedContent, setCopiedContent] = useState<string | null>(null);
+  const [deploying, setDeploying] = useState(false);
   const exportJSON = useBuilderStore((state) => state.exportJSON);
   const importJSON = useBuilderStore((state) => state.importJSON);
   const undo = useBuilderStore((state) => state.undo);
@@ -185,39 +186,29 @@ const SubHeader: FC = () => {
     }
   };
 
-  // const handleDeploy = async () => {
-  //   const response = await deployApp("sample-project");
-  //   if (response.status === 200) {
-  //     console.log("Deployment initiated:", response);
-  //   } else {
-  //     console.log("Deployment failed");
-  //   }
-  // };
-
   const handleDeploy = async () => {
     try {
-      const response = await deployApp("sample-project");
-      alert("🚀 Deployment started");
-      console.log("Deployment response:", response);
-    } catch {
+      setDeploying(true);
+
+      const jsonString = exportJSON();
+      const json = JSON.parse(jsonString);
+
+      if (!json || json.length === 0) {
+        alert("⚠ Nothing to deploy");
+        return;
+      }
+
+      const response = await deployApp("sample-project", json);
+
+      alert("🚀 Deployment Started in GitHub Actions!");
+      console.log(response);
+    } catch (err) {
+      console.error(err);
       alert("❌ Deployment failed");
+    } finally {
+      setDeploying(false);
     }
   };
-
-  // const handleDeploy = async () => {
-  //   alert("Deployment started… ⏳");
-
-  //   const res = await fetch("/api/deploy", { method: "POST" });
-  //   const data = await res.json();
-
-  //   if (data.success) {
-  //     alert(data.url);
-  //     navigator.clipboard.writeText(data.url);
-  //     alert("Production deploy triggered & URL copied 🚀");
-  //   } else {
-  //     alert("Failed ❌");
-  //   }
-  // };
 
   // Handler to open preview in new tab
   const handlePreview = useCallback(() => {
@@ -379,10 +370,11 @@ const SubHeader: FC = () => {
               handleClick={handleSave}
             />
             <MWLButton
-              text="Deploy"
+              text={deploying ? "Deploying..." : "Deploy"}
               color="success"
               variant="outlined"
               handleClick={handleDeploy}
+              disabled={deploying}
             />
           </div>
         </div>

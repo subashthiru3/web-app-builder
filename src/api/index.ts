@@ -26,10 +26,11 @@ export const loadData = async (projectName: string) => {
   }
 };
 
-export const deployApp = async (projectName: string) => {
+export const deployApp = async (projectName: string, pageJson: any) => {
   try {
     const response = await axios.post(`${apiUrl}deploy`, {
       projectName,
+      pageJson,
     });
     return response.data;
   } catch (error) {
