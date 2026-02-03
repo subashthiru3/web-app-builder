@@ -58,5 +58,4 @@ jobs:
           action: "upload"
           app_location: "/"
           output_location: "out"
-          skip_app_build: false
           github_id_token: ${{ steps.idtoken.outputs.result }}
