@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import React from 'react';
-import "../styles/PropertyEditor.css";
-import { ComponentType } from '@/lib/types';
+import React from "react";
+import "../../styles/PropertyEditor.css";
+import { ComponentType } from "@/lib/types";
 import {
   Select,
   MenuItem,
   TextField as MuiTextField,
   FormControlLabel,
   Checkbox,
-} from '@mui/material';
+} from "@mui/material";
 
 interface PropertyEditorProps {
   fieldName: string;
@@ -26,17 +26,17 @@ export const PropertyEditor: React.FC<PropertyEditorProps> = ({
 }) => {
   const getFieldLabel = (field: string) => {
     return field
-      .replace(/([A-Z])/g, ' $1')
+      .replace(/([A-Z])/g, " $1")
       .replace(/^./, (str) => str.toUpperCase())
       .trim();
   };
 
   const renderEditor = () => {
     // Handle variant selector for buttons
-    if (componentType === 'button' && fieldName === 'variant') {
+    if (componentType === "button" && fieldName === "variant") {
       return (
         <Select
-          value={value || 'contained'}
+          value={value || "contained"}
           onChange={(e) => onChange(e.target.value)}
           size="small"
           fullWidth
@@ -49,10 +49,10 @@ export const PropertyEditor: React.FC<PropertyEditorProps> = ({
     }
 
     // Handle color selector for buttons
-    if (componentType === 'button' && fieldName === 'color') {
+    if (componentType === "button" && fieldName === "color") {
       return (
         <Select
-          value={value || 'primary'}
+          value={value || "primary"}
           onChange={(e) => onChange(e.target.value)}
           size="small"
           fullWidth
@@ -68,10 +68,10 @@ export const PropertyEditor: React.FC<PropertyEditorProps> = ({
     }
 
     // Handle size selector for buttons
-    if (componentType === 'button' && fieldName === 'size') {
+    if (componentType === "button" && fieldName === "size") {
       return (
         <Select
-          value={value || 'medium'}
+          value={value || "medium"}
           onChange={(e) => onChange(e.target.value)}
           size="small"
           fullWidth
@@ -84,10 +84,10 @@ export const PropertyEditor: React.FC<PropertyEditorProps> = ({
     }
 
     // Handle button text
-    if (componentType === 'button' && fieldName === 'text') {
+    if (componentType === "button" && fieldName === "text") {
       return (
         <MuiTextField
-          value={value || ''}
+          value={value || ""}
           onChange={(e) => onChange(e.target.value)}
           size="small"
           fullWidth
@@ -97,7 +97,7 @@ export const PropertyEditor: React.FC<PropertyEditorProps> = ({
     }
 
     // Handle button border radius
-    if (componentType === 'button' && fieldName === 'borderRadius') {
+    if (componentType === "button" && fieldName === "borderRadius") {
       return (
         <MuiTextField
           type="number"
@@ -111,10 +111,10 @@ export const PropertyEditor: React.FC<PropertyEditorProps> = ({
     }
 
     // Handle text font weight
-    if (componentType === 'text' && fieldName === 'fontWeight') {
+    if (componentType === "text" && fieldName === "fontWeight") {
       return (
         <Select
-          value={String(value) || '400'}
+          value={String(value) || "400"}
           onChange={(e) => onChange(e.target.value)}
           size="small"
           fullWidth
@@ -129,7 +129,7 @@ export const PropertyEditor: React.FC<PropertyEditorProps> = ({
     }
 
     // Handle text font size
-    if (componentType === 'text' && fieldName === 'fontSize') {
+    if (componentType === "text" && fieldName === "fontSize") {
       return (
         <MuiTextField
           type="number"
@@ -143,17 +143,17 @@ export const PropertyEditor: React.FC<PropertyEditorProps> = ({
     }
 
     // Handle text color
-    if (componentType === 'text' && fieldName === 'color') {
+    if (componentType === "text" && fieldName === "color") {
       return (
-            <div className="property-editor-row">
+        <div className="property-editor-row">
           <input
             type="color"
-            value={value || '#000000'}
+            value={value || "#000000"}
             onChange={(e) => onChange(e.target.value)}
             className="w-12 h-10 rounded border border-slate-300 cursor-pointer"
           />
           <MuiTextField
-                value={value || '#000000'} 
+            value={value || "#000000"}
             onChange={(e) => onChange(e.target.value)}
             size="small"
             fullWidth
@@ -164,10 +164,10 @@ export const PropertyEditor: React.FC<PropertyEditorProps> = ({
     }
 
     // Handle text content
-    if (componentType === 'text' && fieldName === 'content') {
+    if (componentType === "text" && fieldName === "content") {
       return (
         <MuiTextField
-          value={value || ''}
+          value={value || ""}
           onChange={(e) => onChange(e.target.value)}
           size="small"
           fullWidth
@@ -179,7 +179,7 @@ export const PropertyEditor: React.FC<PropertyEditorProps> = ({
     }
 
     // Handle card elevation
-    if (componentType === 'card' && fieldName === 'elevation') {
+    if (componentType === "card" && fieldName === "elevation") {
       return (
         <MuiTextField
           type="number"
@@ -193,7 +193,7 @@ export const PropertyEditor: React.FC<PropertyEditorProps> = ({
     }
 
     // Handle card padding
-    if (componentType === 'card' && fieldName === 'padding') {
+    if (componentType === "card" && fieldName === "padding") {
       return (
         <MuiTextField
           type="number"
@@ -207,17 +207,17 @@ export const PropertyEditor: React.FC<PropertyEditorProps> = ({
     }
 
     // Handle card background color
-    if (componentType === 'card' && fieldName === 'backgroundColor') {
+    if (componentType === "card" && fieldName === "backgroundColor") {
       return (
-            <div className="property-editor-row">
+        <div className="property-editor-row">
           <input
             type="color"
-            value={value || '#ffffff'}
+            value={value || "#ffffff"}
             onChange={(e) => onChange(e.target.value)}
             className="w-12 h-10 rounded border border-slate-300 cursor-pointer"
           />
           <MuiTextField
-                value={value || '#ffffff'}
+            value={value || "#ffffff"}
             onChange={(e) => onChange(e.target.value)}
             size="small"
             fullWidth
@@ -228,7 +228,7 @@ export const PropertyEditor: React.FC<PropertyEditorProps> = ({
     }
 
     // Handle image width
-    if (componentType === 'image' && fieldName === 'width') {
+    if (componentType === "image" && fieldName === "width") {
       return (
         <MuiTextField
           type="number"
@@ -242,7 +242,7 @@ export const PropertyEditor: React.FC<PropertyEditorProps> = ({
     }
 
     // Handle image height
-    if (componentType === 'image' && fieldName === 'height') {
+    if (componentType === "image" && fieldName === "height") {
       return (
         <MuiTextField
           type="number"
@@ -256,7 +256,7 @@ export const PropertyEditor: React.FC<PropertyEditorProps> = ({
     }
 
     // Handle image border radius
-    if (componentType === 'image' && fieldName === 'borderRadius') {
+    if (componentType === "image" && fieldName === "borderRadius") {
       return (
         <MuiTextField
           type="number"
@@ -270,10 +270,10 @@ export const PropertyEditor: React.FC<PropertyEditorProps> = ({
     }
 
     // Handle image URL
-    if (componentType === 'image' && fieldName === 'imageUrl') {
+    if (componentType === "image" && fieldName === "imageUrl") {
       return (
         <MuiTextField
-          value={value || ''}
+          value={value || ""}
           onChange={(e) => onChange(e.target.value)}
           size="small"
           fullWidth
@@ -303,7 +303,9 @@ export const PropertyEditor: React.FC<PropertyEditorProps> = ({
           multiline
           minRows={3}
           maxRows={10}
-          placeholder={fieldName === "rowData" ? "[{\"id\":1,...}]" : "[{\"field\":\"id\",...}]"}
+          placeholder={
+            fieldName === "rowData" ? '[{"id":1,...}]' : '[{"field":"id",...}]'
+          }
         />
       );
     }
@@ -311,7 +313,7 @@ export const PropertyEditor: React.FC<PropertyEditorProps> = ({
     // Default text input
     return (
       <MuiTextField
-        value={value || ''}
+        value={value || ""}
         onChange={(e) => onChange(e.target.value)}
         size="small"
         fullWidth
@@ -324,7 +326,7 @@ export const PropertyEditor: React.FC<PropertyEditorProps> = ({
       <label className="block text-sm font-medium text-slate-700">
         {getFieldLabel(fieldName)}
       </label>
-      {renderEditor()} 
+      {renderEditor()}
     </div>
   );
 };

@@ -2,14 +2,37 @@
 .draggable-component {
   padding: 0.75rem;
   margin-bottom: 0.5rem;
-  background-color: #f1f5f9; /* slate-100 */
-  border: 1px solid #cbd5e1; /* slate-300 */
+  background-color: white; /* slate-100 */
+  border: 2px dashed #cbd5e1; /* slate-300 */
   border-radius: 0.5rem;
   cursor: move;
-  transition: background 0.2s, opacity 0.2s;
+  transition:
+    background 0.2s,
+    opacity 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.draggableComponent-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.draggable-component-collapsed {
+  background-color: white; /* slate-100 */
+  border: 2px dashed #cbd5e1; /* slate-300 */
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: move;
+  border-radius: 0.5rem;
 }
 .draggable-component:hover {
-  background-color: #e2e8f0; /* slate-200 */
+  background-color: whitesmoke; /* slate-200 */
+}
+.draggable-component-collapsed:hover {
+  background-color: whitesmoke; /* slate-200 */
 }
 .draggable-component.dragging {
   opacity: 0.5;
@@ -35,4 +58,8 @@
   flex: 1;
   display: flex;
   overflow: hidden;
+}
+
+.builder-app-root .MuiToolbar-root.MuiToolbar-gutters.MuiToolbar-regular {
+  padding: 0px 15px 0px 15px;
 }

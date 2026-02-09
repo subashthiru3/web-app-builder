@@ -3,7 +3,7 @@
 
 import React, { useEffect, useState } from "react";
 import { CanvasComponent } from "@/lib/types";
-import { CanvasComponentRenderer } from "@/AppBuilder/CanvasComponentRenderer";
+import { CanvasComponentRenderer } from "@/AppBuilder/Canvas/CanvasComponentRenderer";
 
 
 const PreviewPage: React.FC = () => {
