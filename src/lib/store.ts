@@ -3,65 +3,78 @@
 import { create } from "zustand";
 import { CanvasComponent, ComponentType, ComponentProps } from "./types";
 import { getComponentSchema } from "./componentRegistry";
+import * as pagesStoreModule from "./pagesStore";
 
 interface BuilderStore {
   componentsByPage: {
-    1: {
+    [pageId: number]: {
       id: number;
       name: string;
       components: CanvasComponent[];
     };
   };
   selectedComponentId: string | null;
-  undoStack: { 1: CanvasComponent[][] };
-  redoStack: { 1: CanvasComponent[][] };
-  addComponent: (type: ComponentType) => void;
-  removeComponent: (id: string) => void;
+  undoStack: { [pageId: number]: CanvasComponent[][] };
+  redoStack: { [pageId: number]: CanvasComponent[][] };
+
+  addComponent: (type: ComponentType, pageId: number) => void;
+  removeComponent: (id: string, pageId: number) => void;
   selectComponent: (id: string | null) => void;
-  updateComponentProps: (id: string, props: Partial<ComponentProps>) => void;
-  reorderComponents: (fromIndex: number, toIndex: number) => void;
-  duplicateComponent: (id: string) => void;
-  exportJSON: () => string;
-  importJSON: (json: string) => void;
-  undo: () => void;
-  redo: () => void;
+  updateComponentProps: (
+    id: string,
+    props: Partial<ComponentProps>,
+    pageId: number,
+  ) => void;
+  reorderComponents: (
+    fromIndex: number,
+    toIndex: number,
+    pageId: number,
+  ) => void;
+  duplicateComponent: (id: string, pageId: number) => void;
+
+  exportJSON: (pageId: number) => string;
+  importJSON: (json: string, pageId: number) => void;
+
+  exportProjectJSON: (projectName: string) => string;
+  importProjectJSON: (json: string) => void;
+
+  undo: (pageId: number) => void;
+  redo: (pageId: number) => void;
+
   selectedView: string;
   setSelectedView: (view: string) => void;
+
   sideDrawerOpen: boolean;
   setSideDrawerOpen: (open: boolean) => void;
+
   selectedTab: number;
   selectedTabLabel: string;
   setSelectedTab: (idx: number, label?: string) => void;
 }
 
-// Simple UUID generation without external library
+// Simple ID generator
 const generateId = () => Math.random().toString(36).substr(2, 9);
 
 export const useBuilderStore = create<BuilderStore>((set, get) => ({
-  componentsByPage: {
-    1: {
-      id: 1,
-      name: "Default",
-      components: [],
-    },
-  },
+  componentsByPage: {},
   selectedComponentId: null,
-  undoStack: { 1: [] },
-  redoStack: { 1: [] },
+  undoStack: {},
+  redoStack: {},
+
   selectedView: "Lap View",
-  setSelectedView: (view: string) => set({ selectedView: view }),
+  setSelectedView: (view) => set({ selectedView: view }),
+
   sideDrawerOpen: true,
-  setSideDrawerOpen: (open: boolean) => set({ sideDrawerOpen: open }),
+  setSideDrawerOpen: (open) => set({ sideDrawerOpen: open }),
+
   selectedTab: 0,
   selectedTabLabel: "Pages",
-  setSelectedTab: (idx: number, label?: string) =>
+  setSelectedTab: (idx, label = "Pages") =>
     set({ selectedTab: idx, selectedTabLabel: label }),
 
-  selectComponent: (id: string | null) => {
-    set({ selectedComponentId: id });
-  },
+  selectComponent: (id) => set({ selectedComponentId: id }),
 
-  addComponent: (type: ComponentType) => {
+  addComponent: (type, pageId) => {
     set((state) => {
       const schema = getComponentSchema(type);
       const newComponent: CanvasComponent = {
@@ -69,222 +82,310 @@ export const useBuilderStore = create<BuilderStore>((set, get) => ({
         type,
         props: { ...schema.defaultProps },
       };
-      const pageObj = state.componentsByPage[1];
-      const updatedPage = {
-        ...pageObj,
-        components: [...pageObj.components, newComponent],
+
+      // Try to get the page name from pagesStore if available
+      let pageName = `Page ${pageId}`;
+      try {
+        // Dynamically import to avoid circular dependency
+        import("./pagesStore")
+          .then((pagesStore) => {
+            if (pagesStore && pagesStore.usePagesStore) {
+              const pages = pagesStore.usePagesStore.getState().pages;
+              const found = pages.find(
+                (p: { id: number; name: string }) => p.id === pageId,
+              );
+              if (found && found.name) pageName = found.name;
+            }
+          })
+          .catch(() => {
+            // fallback to default name
+          });
+      } catch (e) {
+        // fallback to default name
+      }
+      const page = state.componentsByPage[pageId] ?? {
+        id: pageId,
+        name: pageName,
+        components: [],
       };
-      const prevUndo = state.undoStack[1] || [];
+
       return {
         componentsByPage: {
           ...state.componentsByPage,
-          1: updatedPage,
+          [pageId]: {
+            ...page,
+            components: [...page.components, newComponent],
+          },
         },
         selectedComponentId: newComponent.id,
         undoStack: {
           ...state.undoStack,
-          1: [...prevUndo, pageObj.components],
+          [pageId]: [...(state.undoStack[pageId] || []), page.components],
         },
         redoStack: {
           ...state.redoStack,
-          1: [],
+          [pageId]: [],
         },
       };
     });
   },
 
-  removeComponent: (id: string) => {
+  removeComponent: (id, pageId) => {
     set((state) => {
-      const pageObj = state.componentsByPage[1];
-      const updatedPage = {
-        ...pageObj,
-        components: pageObj.components.filter((c) => c.id !== id),
-      };
-      const prevUndo = state.undoStack[1] || [];
+      const page = state.componentsByPage[pageId];
+      if (!page) return state;
+
       return {
         componentsByPage: {
           ...state.componentsByPage,
-          1: updatedPage,
+          [pageId]: {
+            ...page,
+            components: page.components.filter((c) => c.id !== id),
+          },
         },
         selectedComponentId:
           state.selectedComponentId === id ? null : state.selectedComponentId,
         undoStack: {
           ...state.undoStack,
-          1: [...prevUndo, pageObj.components],
+          [pageId]: [...(state.undoStack[pageId] || []), page.components],
         },
         redoStack: {
           ...state.redoStack,
-          1: [],
+          [pageId]: [],
         },
       };
     });
   },
 
-  updateComponentProps: (id: string, props: Partial<ComponentProps>) => {
+  updateComponentProps: (id, props, pageId) => {
     set((state) => {
-      const pageObj = state.componentsByPage[1];
-      const updatedPage = {
-        ...pageObj,
-        components: pageObj.components.map((c) =>
-          c.id === id ? { ...c, props: { ...c.props, ...props } } : c,
-        ),
-      };
-      const prevUndo = state.undoStack[1] || [];
-      return {
-        componentsByPage: {
-          ...state.componentsByPage,
-          1: updatedPage,
-        },
-        undoStack: {
-          ...state.undoStack,
-          1: [...prevUndo, pageObj.components],
-        },
-        redoStack: {
-          ...state.redoStack,
-          1: [],
-        },
-      };
-    });
-  },
+      const page = state.componentsByPage[pageId];
+      if (!page) return state;
 
-  reorderComponents: (fromIndex: number, toIndex: number) => {
-    set((state) => {
-      const pageObj = state.componentsByPage[1];
-      const updatedComponents = [...pageObj.components];
-      const [removed] = updatedComponents.splice(fromIndex, 1);
-      updatedComponents.splice(toIndex, 0, removed);
-      const updatedPage = {
-        ...pageObj,
-        components: updatedComponents,
-      };
-      const prevUndo = state.undoStack[1] || [];
       return {
         componentsByPage: {
           ...state.componentsByPage,
-          1: updatedPage,
-        },
-        undoStack: {
-          ...state.undoStack,
-          1: [...prevUndo, pageObj.components],
-        },
-        redoStack: {
-          ...state.redoStack,
-          1: [],
-        },
-      };
-    });
-  },
-
-  duplicateComponent: (id: string) => {
-    set((state) => {
-      const pageObj = state.componentsByPage[1];
-      const component = pageObj.components.find((c) => c.id === id);
-      if (!component) return state;
-      const newComponent: CanvasComponent = {
-        ...component,
-        id: generateId(),
-      };
-      const updatedPage = {
-        ...pageObj,
-        components: [...pageObj.components, newComponent],
-      };
-      const prevUndo = state.undoStack[1] || [];
-      return {
-        componentsByPage: {
-          ...state.componentsByPage,
-          1: updatedPage,
-        },
-        selectedComponentId: newComponent.id,
-        undoStack: {
-          ...state.undoStack,
-          1: [...prevUndo, pageObj.components],
-        },
-        redoStack: {
-          ...state.redoStack,
-          1: [],
-        },
-      };
-    });
-  },
-
-  undo: () => {
-    set((state) => {
-      const pageUndoStack = state.undoStack[1] || [];
-      if (pageUndoStack.length === 0) return state;
-      const prevComponents = pageUndoStack[pageUndoStack.length - 1];
-      const newUndoStack = pageUndoStack.slice(0, -1);
-      const pageRedoStack = state.redoStack[1] || [];
-      const currentPage = state.componentsByPage[1];
-      return {
-        componentsByPage: {
-          ...state.componentsByPage,
-          1: {
-            ...currentPage,
-            components: prevComponents,
+          [pageId]: {
+            ...page,
+            components: page.components.map((c) =>
+              c.id === id ? { ...c, props: { ...c.props, ...props } } : c,
+            ),
           },
         },
         undoStack: {
           ...state.undoStack,
-          1: newUndoStack,
+          [pageId]: [...(state.undoStack[pageId] || []), page.components],
         },
         redoStack: {
           ...state.redoStack,
-          1: [...pageRedoStack, currentPage.components],
+          [pageId]: [],
         },
       };
     });
   },
 
-  redo: () => {
+  reorderComponents: (fromIndex, toIndex, pageId) => {
     set((state) => {
-      const pageRedoStack = state.redoStack[1] || [];
-      if (pageRedoStack.length === 0) return state;
-      const nextComponents = pageRedoStack[pageRedoStack.length - 1];
-      const newRedoStack = pageRedoStack.slice(0, -1);
-      const pageUndoStack = state.undoStack[1] || [];
-      const currentPage = state.componentsByPage[1];
+      const page = state.componentsByPage[pageId];
+      if (!page) return state;
+
+      const updated = [...page.components];
+      const [moved] = updated.splice(fromIndex, 1);
+      updated.splice(toIndex, 0, moved);
+
       return {
         componentsByPage: {
           ...state.componentsByPage,
-          1: {
-            ...currentPage,
-            components: nextComponents,
-          },
+          [pageId]: { ...page, components: updated },
         },
         undoStack: {
           ...state.undoStack,
-          1: [...pageUndoStack, currentPage.components],
+          [pageId]: [...(state.undoStack[pageId] || []), page.components],
         },
         redoStack: {
           ...state.redoStack,
-          1: newRedoStack,
+          [pageId]: [],
         },
       };
     });
   },
 
-  exportJSON: () => {
-    const { componentsByPage } = get();
-    // Export only the page object, not wrapped in "1"
-    return JSON.stringify(componentsByPage[1], null, 2);
+  duplicateComponent: (id, pageId) => {
+    set((state) => {
+      const page = state.componentsByPage[pageId];
+      if (!page) return state;
+
+      const comp = page.components.find((c) => c.id === id);
+      if (!comp) return state;
+
+      const cloned = { ...comp, id: generateId() };
+
+      return {
+        componentsByPage: {
+          ...state.componentsByPage,
+          [pageId]: {
+            ...page,
+            components: [...page.components, cloned],
+          },
+        },
+        selectedComponentId: cloned.id,
+        undoStack: {
+          ...state.undoStack,
+          [pageId]: [...(state.undoStack[pageId] || []), page.components],
+        },
+        redoStack: {
+          ...state.redoStack,
+          [pageId]: [],
+        },
+      };
+    });
   },
 
-  importJSON: (json: string) => {
+  undo: (pageId) => {
+    set((state) => {
+      const undoStack = state.undoStack[pageId] || [];
+      if (!undoStack.length) return state;
+
+      const previous = undoStack[undoStack.length - 1];
+      const page = state.componentsByPage[pageId];
+
+      return {
+        componentsByPage: {
+          ...state.componentsByPage,
+          [pageId]: { ...page, components: previous },
+        },
+        undoStack: {
+          ...state.undoStack,
+          [pageId]: undoStack.slice(0, -1),
+        },
+        redoStack: {
+          ...state.redoStack,
+          [pageId]: [...(state.redoStack[pageId] || []), page.components],
+        },
+      };
+    });
+  },
+
+  redo: (pageId) => {
+    set((state) => {
+      const redoStack = state.redoStack[pageId] || [];
+      if (!redoStack.length) return state;
+
+      const next = redoStack[redoStack.length - 1];
+      const page = state.componentsByPage[pageId];
+
+      return {
+        componentsByPage: {
+          ...state.componentsByPage,
+          [pageId]: { ...page, components: next },
+        },
+        undoStack: {
+          ...state.undoStack,
+          [pageId]: [...(state.undoStack[pageId] || []), page.components],
+        },
+        redoStack: {
+          ...state.redoStack,
+          [pageId]: redoStack.slice(0, -1),
+        },
+      };
+    });
+  },
+
+  exportJSON: (pageId) =>
+    JSON.stringify(get().componentsByPage[pageId], null, 2),
+
+  importJSON: (json, pageId) => {
     try {
       const pageObj = JSON.parse(json);
-      // Wrap imported page object in componentsByPage structure
-      set({
-        componentsByPage: { 1: pageObj },
+      set((state) => ({
+        componentsByPage: {
+          ...state.componentsByPage,
+          [pageId]: pageObj,
+        },
         selectedComponentId: null,
-      });
-      if (typeof window !== "undefined") {
-        localStorage.setItem(
-          "wab_componentsByPage",
-          JSON.stringify({ 1: pageObj }),
-        );
+      }));
+    } catch (e) {
+      console.error("Failed to import page JSON", e);
+    }
+  },
+
+  exportProjectJSON: (projectName) => {
+    const componentsByPage = get().componentsByPage;
+    let pagesStorePages: { id: number; name: string }[] = [];
+    try {
+      // Dynamically import to avoid circular dependency
+      // const pagesStoreModule = require("./pagesStore");
+      if (pagesStoreModule && pagesStoreModule.usePagesStore) {
+        pagesStorePages = pagesStoreModule.usePagesStore.getState().pages;
       }
-    } catch (error) {
-      console.error("Failed to import JSON:", error);
+    } catch {}
+
+    const pages = Object.values(componentsByPage).map((page) => {
+      // Try to get the latest name from pagesStore
+      const found = pagesStorePages.find((p) => p.id === page.id);
+      return {
+        ...page,
+        name: found && found.name ? found.name : page.name,
+      };
+    });
+    return JSON.stringify({ projectName, pages }, null, 2);
+  },
+
+  importProjectJSON: (json) => {
+    try {
+      const project = JSON.parse(json);
+      if (!Array.isArray(project.pages)) return;
+
+      const componentsByPage: BuilderStore["componentsByPage"] = {};
+      const pagesForStore: { id: number; name: string }[] = [];
+      let maxPageId = 0;
+      project.pages.forEach((page: any) => {
+        componentsByPage[page.id] = {
+          id: page.id,
+          name: page.name,
+          components: page.components || [],
+        };
+        pagesForStore.push({ id: page.id, name: page.name });
+        if (typeof page.id === "number" && page.id > maxPageId) {
+          maxPageId = page.id;
+        }
+      });
+
+      set({
+        componentsByPage,
+        selectedComponentId: null,
+        undoStack: {},
+        redoStack: {},
+      });
+
+      // Update pages in usePagesStore and set nextPageId
+      try {
+        import("./pagesStore")
+          .then(({ usePagesStore, setNextPageId }) => {
+            if (usePagesStore) {
+              usePagesStore.setState({
+                pages: pagesForStore,
+                activePageId:
+                  pagesForStore.length > 0 ? pagesForStore[0].id : 0,
+              });
+            }
+            if (typeof setNextPageId === "function") {
+              setNextPageId(maxPageId + 1);
+            }
+          })
+          .catch((e) => {
+            // eslint-disable-next-line no-console
+            console.error(
+              "Failed to update pagesStore from importProjectJSON",
+              e,
+            );
+          });
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.error("Failed to update pagesStore from importProjectJSON", e);
+      }
+    } catch (e) {
+      console.error("Failed to import project JSON", e);
     }
   },
 }));

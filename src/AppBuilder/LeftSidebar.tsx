@@ -7,6 +7,7 @@ import { DraggableComponent } from "./Canvas/DraggableComponent";
 import { ChevronDown } from "lucide-react";
 import { useBuilderStore } from "@/lib/store";
 import CustomTabs from "./CustomTab/CustomTabs";
+import Pages from "./Pages/Pages";
 // ...existing code...
 
 export const LeftSidebar: React.FC = () => {
@@ -62,7 +63,7 @@ export const LeftSidebar: React.FC = () => {
               label: "Pages",
               content: (
                 <div className="left-sidebar-list">
-                  Page management coming soon!
+                  <Pages />
                 </div>
               ),
             },

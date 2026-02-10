@@ -2,23 +2,22 @@
 
 import React from "react";
 import "../../styles/PropertiesPanel.css";
+
 import { useBuilderStore } from "@/lib/store";
+import { usePagesStore } from "@/lib/pagesStore";
 import type { CanvasComponent } from "@/lib/types";
 import type { RowData } from "@/lib/types";
-// ...existing code...
 import { getComponentSchema } from "@/lib/componentRegistry";
 import { PropertyEditor } from "./PropertyEditor";
-// ...existing code...
 
 export const PropertiesPanel: React.FC = () => {
-  const {
-    componentsByPage,
-    selectedComponentId,
-    updateComponentProps,
-  } = useBuilderStore();
-  // Only one page supported, always use page 1
-  const components = componentsByPage[1]?.components || [];
-  const selectedComponent = components.find((c: CanvasComponent) => c.id === selectedComponentId);
+  const { activePageId } = usePagesStore();
+  const { componentsByPage, selectedComponentId, updateComponentProps } =
+    useBuilderStore();
+  const components = componentsByPage[activePageId]?.components || [];
+  const selectedComponent = components.find(
+    (c: CanvasComponent) => c.id === selectedComponentId,
+  );
 
   if (!selectedComponent) {
     return (
@@ -100,7 +99,8 @@ export const PropertiesPanel: React.FC = () => {
                   }
                   updateComponentProps(
                     selectedComponentId!,
-                    { ...selectedComponent.props, [fieldName]: newValue }
+                    { ...selectedComponent.props, [fieldName]: newValue },
+                    activePageId,
                   );
                 }}
                 componentType={selectedComponent.type}

@@ -8,7 +8,7 @@ import { CanvasComponentRenderer } from "./CanvasComponentRenderer";
 import { Trash2, Copy } from "lucide-react";
 
 import "./Canvas.css";
-// import { usePagesStore } from "@/lib/pagesStore";
+import { usePagesStore } from "@/lib/pagesStore";
 
 export const Canvas: React.FC = () => {
   const {
@@ -20,18 +20,26 @@ export const Canvas: React.FC = () => {
     removeComponent,
   } = useBuilderStore();
   const selectedView = useBuilderStore((state) => state.selectedView);
+  const { pages, activePageId, addPage, setActivePage } = usePagesStore();
+
   // const selectedTabLabel = useBuilderStore((state) => state.selectedTabLabel);
   // Page functionality removed
 
-  const [{ isOver }, drop] = useDrop(() => ({
-    accept: "component",
-    drop: (item: { type: ComponentType }) => {
-      addComponent(item.type);
-    },
-    collect: (monitor) => ({
-      isOver: !!monitor.isOver(),
+  const dropEnabled = pages.length > 0 && activePageId !== 0;
+  const [{ isOver }, drop] = useDrop(
+    () => ({
+      accept: "component",
+      drop: dropEnabled
+        ? (item: { type: ComponentType }) => {
+            addComponent(item.type, activePageId);
+          }
+        : undefined,
+      collect: (monitor) => ({
+        isOver: dropEnabled && !!monitor.isOver(),
+      }),
     }),
-  }));
+    [dropEnabled, activePageId, addComponent],
+  );
 
   // Create a ref for the canvas div
   const canvasRef = React.useRef<HTMLDivElement>(null);
@@ -43,18 +51,21 @@ export const Canvas: React.FC = () => {
 
   // Attach drop to the ref
   React.useEffect(() => {
-    if (canvasRef.current) {
+    if (canvasRef.current && dropEnabled) {
       drop(canvasRef.current);
     }
-  }, [drop]);
+  }, [drop, dropEnabled]);
 
-  // Use default page id 1 for all components
-  const pageComponents = (componentsByPage[1]?.components || []) as typeof componentsByPage[1]["components"];
-  console.log("Rendering Canvas with components:", pageComponents);
+  const pageComponents = (componentsByPage[activePageId]?.components ||
+    []) as CanvasComponent[];
   return (
     <div ref={canvasRef} className={`canvas ${canvasClass}`}>
       <div className={`canvas-inner ${isOver ? "canvas-inner-over" : ""}`}>
-        {pageComponents.length === 0 ? (
+        {pages.length === 0 || activePageId === 0 ? (
+          <div className="canvas-empty-message">
+            No pages found. Please add a page to enable drag & drop.
+          </div>
+        ) : pageComponents.length === 0 ? (
           <div className="canvas-empty-message">
             No components found. Drag components to start building.
           </div>
@@ -70,24 +81,22 @@ export const Canvas: React.FC = () => {
               onClick={() => selectComponent(component.id)}
             >
               <CanvasComponentRenderer component={component} />
-
               {selectedComponentId === component.id && (
                 <div className="canvas-component-actions">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      duplicateComponent(component.id);
+                      duplicateComponent(component.id, activePageId);
                     }}
                     className="properties-panel-header-btn"
                     title="Duplicate component"
                   >
                     <Copy size={16} />
                   </button>
-
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      removeComponent(component.id);
+                      removeComponent(component.id, activePageId);
                     }}
                     className="properties-panel-header-btn delete"
                     title="Delete component"

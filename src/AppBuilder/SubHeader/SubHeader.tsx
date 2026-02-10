@@ -16,6 +16,7 @@ import { BsFiletypeJson } from "react-icons/bs";
 // Removed unused FaFileExport, FaFileImport
 import { FaSave, FaTabletAlt } from "react-icons/fa";
 import { PiExportBold } from "react-icons/pi";
+import { usePagesStore } from "@/lib/pagesStore";
 
 type ClipboardAction = "copy" | "cut" | null;
 
@@ -59,10 +60,12 @@ IconWrapper.displayName = "IconWrapper";
 const SubHeader: FC = () => {
   const [clipboardAction, setClipboardAction] = useState<ClipboardAction>(null);
   const [copiedContent, setCopiedContent] = useState<string | null>(null);
-  const exportJSON = useBuilderStore((state) => state.exportJSON);
+  const exportProjectJSON = useBuilderStore((state) => state.exportProjectJSON);
   const importJSON = useBuilderStore((state) => state.importJSON);
+  const importProjectJSON = useBuilderStore((state) => state.importProjectJSON);
   const undo = useBuilderStore((state) => state.undo);
   const redo = useBuilderStore((state) => state.redo);
+  const activePageId = usePagesStore((state) => state.activePageId);
   const selectedView = useBuilderStore((state) => state.selectedView);
   const setSelectedView = useBuilderStore((state) => state.setSelectedView);
 
@@ -70,12 +73,13 @@ const SubHeader: FC = () => {
   const [jsonDialogOpen, setJsonDialogOpen] = useState(false);
   const [jsonText, setJsonText] = useState("");
   const [jsonError, setJsonError] = useState("");
+  console.log("SubHeader render start", jsonText);
   // Handler to open JSON dialog
   const handleOpenJsonDialog = useCallback(() => {
-    setJsonText(exportJSON());
+    setJsonText(exportProjectJSON(PROJECT_NAME));
     setJsonError("");
     setJsonDialogOpen(true);
-  }, [exportJSON]);
+  }, [exportProjectJSON]);
 
   // Handler to close JSON dialog
   const handleCloseJsonDialog = useCallback(() => {
@@ -86,13 +90,18 @@ const SubHeader: FC = () => {
   // Handler to save edited JSON
   const handleSaveJsonDialog = useCallback(() => {
     try {
-      importJSON(jsonText);
+      const parsed = JSON.parse(jsonText);
+      if (parsed && Array.isArray(parsed.pages)) {
+        importProjectJSON(jsonText);
+      } else {
+        importJSON(jsonText, 0);
+      }
       setJsonDialogOpen(false);
       setJsonError("");
     } catch {
       setJsonError("Invalid JSON");
     }
-  }, [importJSON, jsonText]);
+  }, [importJSON, importProjectJSON, jsonText]);
 
   // Handler to copy JSON to clipboard
   const handleCopyJson = useCallback(() => {
@@ -110,30 +119,34 @@ const SubHeader: FC = () => {
   // Removed unused handleClear
   // Handler to export JSON
   const handleExportJSON = useCallback(() => {
-    const json = exportJSON();
+    const json = exportProjectJSON(PROJECT_NAME);
     const blob = new Blob([json], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "components.json";
+    a.download = "project.json";
     document.body.appendChild(a);
     a.click();
     setTimeout(() => {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     }, 0);
-  }, [exportJSON]);
+  }, [exportProjectJSON]);
 
   // Action handlers
   // Removed unused handleSettings
 
   const handleUndo = useCallback(() => {
-    undo();
-  }, [undo]);
+    if (activePageId !== undefined && activePageId !== null) {
+      undo(activePageId);
+    }
+  }, [undo, activePageId]);
 
   const handleRedo = useCallback(() => {
-    redo();
-  }, [redo]);
+    if (activePageId !== undefined && activePageId !== null) {
+      redo(activePageId);
+    }
+  }, [redo, activePageId]);
 
   // Removed unused handleCopy
 
@@ -267,7 +280,19 @@ const SubHeader: FC = () => {
                   reader.onload = (event) => {
                     try {
                       const json = event.target?.result as string;
-                      importJSON(json);
+                      let parsed;
+                      try {
+                        parsed = JSON.parse(json);
+                      } catch {
+                        alert("Invalid JSON file.");
+                        return;
+                      }
+                      if (parsed && Array.isArray(parsed.pages)) {
+                        importProjectJSON(json);
+                      } else {
+                        importJSON(json, 0);
+                      }
+                      setJsonText(json);
                     } catch {
                       alert("Invalid JSON file.");
                     }
