@@ -5,7 +5,7 @@ import { CanvasComponent, ComponentType, ComponentProps } from "./types";
 import { getComponentSchema } from "./componentRegistry";
 import * as pagesStoreModule from "./pagesStore";
 
-interface BuilderStore {
+export interface BuilderStore {
   componentsByPage: {
     [pageId: number]: {
       id: number;
