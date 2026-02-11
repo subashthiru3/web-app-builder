@@ -20,7 +20,7 @@ export const Canvas: React.FC = () => {
     removeComponent,
   } = useBuilderStore();
   const selectedView = useBuilderStore((state) => state.selectedView);
-  const { pages, activePageId, addPage, setActivePage } = usePagesStore();
+  const { pages, activePageId } = usePagesStore();
 
   // const selectedTabLabel = useBuilderStore((state) => state.selectedTabLabel);
   // Page functionality removed

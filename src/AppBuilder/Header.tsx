@@ -1,9 +1,8 @@
 import React from "react";
-import { MwlTopNavbarProps } from "react-web-white-label";
 import { MWLTopNavbar } from "react-web-white-label";
 
 interface HeaderProps {
-  headerProps: MwlTopNavbarProps;
+  headerProps: any;
 }
 
 const Header: React.FC<HeaderProps> = ({ headerProps }) => {

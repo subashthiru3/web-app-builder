@@ -12,15 +12,9 @@ export interface CustomTabsProps {
   initialTab?: number;
 }
 
-const CustomTabs: React.FC<CustomTabsProps> = ({ tabs, initialTab = 0 }) => {
+const CustomTabs: React.FC<CustomTabsProps> = ({ tabs }) => {
   const selectedTab = useBuilderStore((state) => state.selectedTab);
   const setSelectedTab = useBuilderStore((state) => state.setSelectedTab);
-
-  // Optionally set initial tab on mount
-  // React.useEffect(() => {
-  //   setSelectedTab(initialTab, tabs[initialTab]?.label ?? "");
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [initialTab, tabs]);
 
   return (
     <div className="mui-tabs-root">

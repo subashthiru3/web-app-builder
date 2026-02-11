@@ -42,7 +42,7 @@ import {
   GridRowParams,
   GridToolbarProps,
 } from "@mui/x-data-grid";
-import { GridApiPremium } from "@mui/x-data-grid-premium/models/gridApiPremium";
+import { GridApiPremium } from "@mui/x-data-grid-premium/models";
 import { GridApiPro } from "@mui/x-data-grid-pro";
 
 export interface MyToolbarProps extends Partial<GridToolbarProps> {

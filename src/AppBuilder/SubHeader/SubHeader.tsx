@@ -1,4 +1,4 @@
-import React, { FC, useState, useCallback, useMemo, memo } from "react";
+import React, { FC, useState, useCallback, memo } from "react";
 import Tooltip from "@mui/material/Tooltip";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
@@ -17,8 +17,8 @@ import { BsFiletypeJson } from "react-icons/bs";
 import { FaSave, FaTabletAlt } from "react-icons/fa";
 import { PiExportBold } from "react-icons/pi";
 import { usePagesStore } from "@/lib/pagesStore";
-
-type ClipboardAction = "copy" | "cut" | null;
+import { deployApp, saveData } from "@/api";
+import { GrDeploy } from "react-icons/gr";
 
 // Constants
 const ICON_COLOR = "#757575";
@@ -58,9 +58,8 @@ const IconWrapper: FC<{
 IconWrapper.displayName = "IconWrapper";
 
 const SubHeader: FC = () => {
-  const [clipboardAction, setClipboardAction] = useState<ClipboardAction>(null);
-  const [copiedContent, setCopiedContent] = useState<string | null>(null);
   const exportProjectJSON = useBuilderStore((state) => state.exportProjectJSON);
+  const [deploying, setDeploying] = useState(false);
   const importJSON = useBuilderStore((state) => state.importJSON);
   const importProjectJSON = useBuilderStore((state) => state.importProjectJSON);
   const undo = useBuilderStore((state) => state.undo);
@@ -98,8 +97,9 @@ const SubHeader: FC = () => {
       }
       setJsonDialogOpen(false);
       setJsonError("");
-    } catch {
+    } catch (err) {
       setJsonError("Invalid JSON");
+      console.error("Failed to import JSON:", err);
     }
   }, [importJSON, importProjectJSON, jsonText]);
 
@@ -162,13 +162,44 @@ const SubHeader: FC = () => {
 
   // Removed unused handleSelectChange
 
-  const handleSave = useCallback(() => {
-    console.log("Save clicked");
-  }, []);
+  const handleSave = async () => {
+    if (jsonText) {
+      const response = await saveData(jsonText);
+      if (response.status === 200) {
+        alert(response.data?.message);
+      }
+    } else {
+      console.log("No JSON data to save");
+    }
+  };
+
+  const handleDeploy = async () => {
+    try {
+      setDeploying(true);
+
+      const jsonString = exportProjectJSON(PROJECT_NAME);
+      const json = JSON.parse(jsonString);
+
+      if (!json || json.length === 0) {
+        alert("⚠ Nothing to deploy");
+        return;
+      }
+
+      const response = await deployApp("sample-project", json);
+
+      alert("🚀 Deployment Started in GitHub Actions!");
+      console.log(response);
+    } catch (err) {
+      console.error(err);
+      alert("❌ Deployment failed");
+    } finally {
+      setDeploying(false);
+    }
+  };
 
   // Handler to open preview in new tab
   const handlePreview = useCallback(() => {
-    window.open("/preview", "_blank");
+    window.open("/preview?project=sample-project", "_blank");
   }, []);
 
   const handleLaptopView = useCallback(() => {
@@ -182,14 +213,6 @@ const SubHeader: FC = () => {
   const handleTabletView = useCallback(() => {
     setSelectedView("Tablet View");
   }, [setSelectedView]);
-
-  // Memoized values
-  const isPasteEnabled = useMemo(
-    () => clipboardAction !== null && copiedContent !== null,
-    [clipboardAction, copiedContent],
-  );
-
-  // Removed unused iconStyle and pasteIconStyle
 
   return (
     <div className="mwl-subheader-container">
@@ -283,8 +306,9 @@ const SubHeader: FC = () => {
                       let parsed;
                       try {
                         parsed = JSON.parse(json);
-                      } catch {
+                      } catch (error) {
                         alert("Invalid JSON file.");
+                        console.error("Failed to parse JSON from file:", error);
                         return;
                       }
                       if (parsed && Array.isArray(parsed.pages)) {
@@ -293,8 +317,9 @@ const SubHeader: FC = () => {
                         importJSON(json, 0);
                       }
                       setJsonText(json);
-                    } catch {
+                    } catch (err) {
                       alert("Invalid JSON file.");
+                      console.error("Failed to import JSON from file:", err);
                     }
                   };
                   reader.readAsText(file);
@@ -345,12 +370,15 @@ const SubHeader: FC = () => {
                 </Button>
               </DialogActions>
             </Dialog>
-            {/* Commented for suggestion */}
-            {/* <IconWrapper onClick={handleClear}>
-              <MdClearAll color={ICON_COLOR} size={20} />
-            </IconWrapper> */}
             <IconWrapper onClick={handleSave} title="Save">
               <FaSave color={ICON_COLOR} size={20} />
+            </IconWrapper>
+            <IconWrapper
+              disabled={deploying}
+              onClick={handleDeploy}
+              title="Deploy"
+            >
+              <GrDeploy color={ICON_COLOR} size={20} />
             </IconWrapper>
           </div>
         </div>

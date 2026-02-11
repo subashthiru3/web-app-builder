@@ -41,14 +41,14 @@ export const PropertiesPanel: React.FC = () => {
           <h3 className="properties-panel-title">{schema.label} Properties</h3>
           {/* <div className="properties-panel-header-actions">
             <button
-              onClick={() => duplicateComponent(selectedComponentId)}
+              onClick={() => duplicateComponent(selectedComponentId ?? "")}
               className="properties-panel-header-btn"
               title="Duplicate component"
             >
               <Copy size={18} className="properties-panel-header-icon" />
             </button>
             <button
-              onClick={() => removeComponent(selectedComponentId)}
+              onClick={() => removeComponent(selectedComponentId ?? "")}
               className="properties-panel-header-btn delete"
               title="Delete component"
             >
