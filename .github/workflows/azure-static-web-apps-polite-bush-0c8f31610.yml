@@ -1,11 +1,9 @@
 name: Azure Static Web Apps CI/CD
 
 on:
-  workflow_dispatch:
-    inputs:
-      project:
-        required: false
-        type: string
+  push:
+    branches:
+      - master
 
 jobs:
   build_and_deploy_job:
@@ -60,3 +58,6 @@ jobs:
           action: "upload"
           app_location: "/"
           output_location: "out"
+
+        env:
+          NEXT_PUBLIC_API_BASE_URL: ${{ secrets.NEXT_PUBLIC_PROD_API_BASE_URL }}

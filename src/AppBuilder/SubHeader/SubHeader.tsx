@@ -23,7 +23,7 @@ import { GrDeploy } from "react-icons/gr";
 // Constants
 const ICON_COLOR = "#757575";
 const DISABLED_COLOR = "#BDBDBD";
-const PROJECT_NAME = "My Project";
+const PROJECT_NAME = "krish-commerce";
 
 // Removed unused VIEW_OPTIONS
 
@@ -164,7 +164,7 @@ const SubHeader: FC = () => {
 
   const handleSave = async () => {
     if (jsonText) {
-      const response = await saveData(jsonText);
+      const response = await saveData(PROJECT_NAME, jsonText);
       if (response.status === 200) {
         alert(response.data?.message);
       }
@@ -185,7 +185,7 @@ const SubHeader: FC = () => {
         return;
       }
 
-      const response = await deployApp("sample-project", json);
+      const response = await deployApp(PROJECT_NAME, json);
 
       alert("🚀 Deployment Started in GitHub Actions!");
       console.log(response);
@@ -199,7 +199,7 @@ const SubHeader: FC = () => {
 
   // Handler to open preview in new tab
   const handlePreview = useCallback(() => {
-    window.open("/preview?project=sample-project", "_blank");
+    window.open(`/preview?project=${PROJECT_NAME}`, "_blank");
   }, []);
 
   const handleLaptopView = useCallback(() => {
