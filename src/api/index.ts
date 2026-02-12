@@ -1,10 +1,10 @@
 import axios from "axios";
 
-const apiUrl = process.env.NEXT_API_BASE_URL || "http://localhost:4000/api/";
+const apiUrl = process.env.NEXT_PUBLIC_LOCAL_API_BASE_URL;
 
-export const saveData = async (data: any) => {
+export const saveData = async (projectName: string, data: any) => {
   const payload = {
-    projectName: "sample-grid",
+    projectName: projectName,
     pageJson: data,
   };
   try {

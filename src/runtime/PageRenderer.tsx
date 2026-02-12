@@ -1,6 +1,6 @@
 "use client";
 
-import { CanvasComponentRenderer } from "@/AppBuilder/CanvasComponentRenderer";
+import { CanvasComponentRenderer } from "@/AppBuilder/Canvas/CanvasComponentRenderer";
 import { CanvasComponent } from "@/lib/types";
 
 type Props = {

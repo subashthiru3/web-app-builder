@@ -1,18 +1,23 @@
 import React from "react";
 import { useDrag } from "react-dnd";
 
-import "./AppBuilder.css";
+import "../AppBuilder.css";
 import { ComponentType } from "@/lib/types";
+import { useBuilderStore } from "@/lib/store";
 
 interface DraggableComponentProps {
   type: ComponentType;
   label: string;
+  icon: React.ReactNode | string;
 }
 
 export const DraggableComponent: React.FC<DraggableComponentProps> = ({
   type,
   label,
+  icon,
 }) => {
+  const sideDrawerOpen = useBuilderStore((state) => state.sideDrawerOpen);
+
   const [{ isDragging }, drag] = useDrag(() => ({
     type: "component",
     item: { type },
@@ -31,9 +36,21 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
   return (
     <div
       ref={divRef}
-      className={`draggable-component${isDragging ? " dragging" : ""}`}
+      className={
+        sideDrawerOpen
+          ? `draggable-component${isDragging ? " dragging" : ""}`
+          : "draggable-component-collapsed"
+      }
+      title={!sideDrawerOpen ? label : undefined}
     >
-      <span className="draggable-label">{label}</span>
+      {!sideDrawerOpen ? (
+        <div className="draggableComponent-icon">{icon}</div>
+      ) : (
+        <>
+          <div>{icon}</div>
+          <span className="draggable-label">{label}</span>
+        </>
+      )}
     </div>
   );
 };

@@ -1,23 +1,22 @@
 "use client";
 
 import React from "react";
-import "../styles/PropertiesPanel.css";
+import "../../styles/PropertiesPanel.css";
+
 import { useBuilderStore } from "@/lib/store";
+import { usePagesStore } from "@/lib/pagesStore";
+import type { CanvasComponent } from "@/lib/types";
+import type { RowData } from "@/lib/types";
 import { getComponentSchema } from "@/lib/componentRegistry";
 import { PropertyEditor } from "./PropertyEditor";
-import { Trash2, Copy } from "lucide-react";
 
 export const PropertiesPanel: React.FC = () => {
-  const {
-    components,
-    selectedComponentId,
-    removeComponent,
-    duplicateComponent,
-    updateComponentProps,
-  } = useBuilderStore();
-
+  const { activePageId } = usePagesStore();
+  const { componentsByPage, selectedComponentId, updateComponentProps } =
+    useBuilderStore();
+  const components = componentsByPage[activePageId]?.components || [];
   const selectedComponent = components.find(
-    (c) => c.id === selectedComponentId,
+    (c: CanvasComponent) => c.id === selectedComponentId,
   );
 
   if (!selectedComponent) {
@@ -40,7 +39,7 @@ export const PropertiesPanel: React.FC = () => {
       <div className="properties-panel-header">
         <div className="properties-panel-header-row">
           <h3 className="properties-panel-title">{schema.label} Properties</h3>
-          <div className="properties-panel-header-actions">
+          {/* <div className="properties-panel-header-actions">
             <button
               onClick={() => duplicateComponent(selectedComponentId ?? "")}
               className="properties-panel-header-btn"
@@ -58,7 +57,7 @@ export const PropertiesPanel: React.FC = () => {
                 className="properties-panel-header-icon delete"
               />
             </button>
-          </div>
+          </div> */}
         </div>
         <div className="properties-panel-info">ID: {selectedComponentId}</div>
       </div>
@@ -82,7 +81,7 @@ export const PropertiesPanel: React.FC = () => {
                   let newValue = value;
                   if (fieldName === "rowData") {
                     if (Array.isArray(value)) {
-                      newValue = value.map((row: any, idx: number) => {
+                      newValue = value.map((row: RowData, idx: number) => {
                         if (
                           row &&
                           (row.id === undefined ||
@@ -98,9 +97,11 @@ export const PropertiesPanel: React.FC = () => {
                       return;
                     }
                   }
-                  updateComponentProps(selectedComponentId!, {
-                    [fieldName]: newValue,
-                  } as any);
+                  updateComponentProps(
+                    selectedComponentId!,
+                    { ...selectedComponent.props, [fieldName]: newValue },
+                    activePageId,
+                  );
                 }}
                 componentType={selectedComponent.type}
               />

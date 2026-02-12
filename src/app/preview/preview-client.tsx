@@ -2,9 +2,9 @@
 
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { CanvasComponentRenderer } from "@/AppBuilder/CanvasComponentRenderer";
 import { CanvasComponent } from "@/lib/types";
 import { loadData } from "@/api";
+import { CanvasComponentRenderer } from "@/AppBuilder/Canvas/CanvasComponentRenderer";
 
 export default function PreviewClient() {
   const searchParams = useSearchParams();

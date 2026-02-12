@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import "../styles/PropertyEditor.css";
+import "../../styles/PropertyEditor.css";
 import { ComponentType } from "@/lib/types";
 import { Select, MenuItem, TextField as MuiTextField } from "@mui/material";
 

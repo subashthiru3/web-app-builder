@@ -1,4 +1,5 @@
-import React, { FC, useState, useCallback, useMemo, memo } from "react";
+import React, { FC, useState, useCallback, memo } from "react";
+import Tooltip from "@mui/material/Tooltip";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
@@ -6,91 +7,101 @@ import DialogActions from "@mui/material/DialogActions";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import "./SubHeader.css";
-import SettingsIcon from "@mui/icons-material/Settings";
-import ContentCopyIcon from "@mui/icons-material/ContentCopy";
-import ContentCutIcon from "@mui/icons-material/ContentCut";
-import ContentPasteIcon from "@mui/icons-material/ContentPaste";
-import RefreshIcon from "@mui/icons-material/Refresh";
-import LaptopIcon from "@mui/icons-material/Laptop";
-import RemoveRedEyeIcon from "@mui/icons-material/RemoveRedEye";
-import TabletAndroidIcon from "@mui/icons-material/TabletAndroid";
-import IosShareIcon from "@mui/icons-material/IosShare";
-import SaveIcon from "@mui/icons-material/Save";
-import { MWLSelectField, MWLButton } from "react-web-white-label";
+// Removed unused MUI and react-web-white-label icon imports
 import { useBuilderStore } from "@/lib/store";
-import Undo from "../undo";
-import Redo from "../redo";
+import { LuUndo2, LuRedo2, LuImport } from "react-icons/lu";
+import { IoMdEye } from "react-icons/io";
+import { MdOutlineLaptopMac, MdTabletAndroid } from "react-icons/md";
+import { BsFiletypeJson } from "react-icons/bs";
+// Removed unused FaFileExport, FaFileImport
+import { FaSave, FaTabletAlt } from "react-icons/fa";
+import { PiExportBold } from "react-icons/pi";
+import { usePagesStore } from "@/lib/pagesStore";
 import { deployApp, saveData } from "@/api";
-
-type ClipboardAction = "copy" | "cut" | null;
+import { GrDeploy } from "react-icons/gr";
 
 // Constants
 const ICON_COLOR = "#757575";
 const DISABLED_COLOR = "#BDBDBD";
-const PROJECT_NAME = "My Project";
+const PROJECT_NAME = "krish-commerce";
 
-const VIEW_OPTIONS = [
-  { id: "shrinktoview", title: "Shrink to View" },
-  { id: "fullview", title: "Full View" },
-  { id: "mobileview", title: "Mobile View" },
-];
+// Removed unused VIEW_OPTIONS
 
 // Reusable icon wrapper component
+
 const IconWrapper: FC<{
   onClick?: () => void;
   disabled?: boolean;
   children: React.ReactNode;
-}> = memo(({ onClick, disabled, children }) => (
-  <div
-    className={`icon-wrapper ${disabled ? "disabled" : ""}`}
-    onClick={disabled ? undefined : onClick}
-    style={{
-      cursor: disabled ? "not-allowed" : onClick ? "pointer" : "default",
-    }}
-  >
-    {children}
-  </div>
-));
+  title?: string;
+}> = memo(({ onClick, disabled, children, title }) => {
+  const icon = (
+    <div
+      className={`icon-wrapper ${disabled ? "disabled" : ""}`}
+      onClick={disabled ? undefined : onClick}
+      style={{
+        cursor: disabled ? "not-allowed" : onClick ? "pointer" : "default",
+      }}
+    >
+      {children}
+    </div>
+  );
+  return title ? (
+    <Tooltip title={title} arrow>
+      <span>{icon}</span>
+    </Tooltip>
+  ) : (
+    icon
+  );
+});
 
 IconWrapper.displayName = "IconWrapper";
 
 const SubHeader: FC = () => {
-  const [clipboardAction, setClipboardAction] = useState<ClipboardAction>(null);
-  const [copiedContent, setCopiedContent] = useState<string | null>(null);
+  const exportProjectJSON = useBuilderStore((state) => state.exportProjectJSON);
   const [deploying, setDeploying] = useState(false);
-  const exportJSON = useBuilderStore((state) => state.exportJSON);
   const importJSON = useBuilderStore((state) => state.importJSON);
+  const importProjectJSON = useBuilderStore((state) => state.importProjectJSON);
   const undo = useBuilderStore((state) => state.undo);
   const redo = useBuilderStore((state) => state.redo);
+  const activePageId = usePagesStore((state) => state.activePageId);
+  const selectedView = useBuilderStore((state) => state.selectedView);
+  const setSelectedView = useBuilderStore((state) => state.setSelectedView);
 
   // Dialog state for preview/edit JSON
   const [jsonDialogOpen, setJsonDialogOpen] = useState(false);
   const [jsonText, setJsonText] = useState("");
   const [jsonError, setJsonError] = useState("");
+  console.log("SubHeader render start", jsonText);
   // Handler to open JSON dialog
   const handleOpenJsonDialog = useCallback(() => {
-    setJsonText(exportJSON());
+    setJsonText(exportProjectJSON(PROJECT_NAME));
     setJsonError("");
     setJsonDialogOpen(true);
-  }, [exportJSON]);
+  }, [exportProjectJSON]);
 
   // Handler to close JSON dialog
   const handleCloseJsonDialog = useCallback(() => {
     setJsonDialogOpen(false);
     setJsonError("");
   }, []);
-
+  console.log("SubHeader rendered", jsonText);
   // Handler to save edited JSON
   const handleSaveJsonDialog = useCallback(() => {
     try {
-      importJSON(jsonText);
+      const parsed = JSON.parse(jsonText);
+      if (parsed && Array.isArray(parsed.pages)) {
+        importProjectJSON(jsonText);
+      } else {
+        importJSON(jsonText, 0);
+      }
       setJsonDialogOpen(false);
       setJsonError("");
     } catch (err) {
       setJsonError("Invalid JSON");
       console.error("Failed to import JSON:", err);
     }
-  }, [importJSON, jsonText]);
+  }, [importJSON, importProjectJSON, jsonText]);
 
   // Handler to copy JSON to clipboard
   const handleCopyJson = useCallback(() => {
@@ -105,79 +116,55 @@ const SubHeader: FC = () => {
     } catch {}
   }, []);
   // Handler to clear all components
-  const handleClear = useCallback(() => {
-    importJSON("[]");
-  }, [importJSON]);
+  // Removed unused handleClear
   // Handler to export JSON
   const handleExportJSON = useCallback(() => {
-    const json = exportJSON();
+    const json = exportProjectJSON(PROJECT_NAME);
     const blob = new Blob([json], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "components.json";
+    a.download = "project.json";
     document.body.appendChild(a);
     a.click();
     setTimeout(() => {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     }, 0);
-  }, [exportJSON]);
+  }, [exportProjectJSON]);
 
   // Action handlers
-  const handleSettings = useCallback(() => {
-    console.log("Settings clicked");
-    // Add your settings logic here
-  }, []);
+  // Removed unused handleSettings
 
   const handleUndo = useCallback(() => {
-    undo();
-  }, [undo]);
+    if (activePageId !== undefined && activePageId !== null) {
+      undo(activePageId);
+    }
+  }, [undo, activePageId]);
 
   const handleRedo = useCallback(() => {
-    redo();
-  }, [redo]);
-
-  const handleCopy = useCallback(() => {
-    console.log("Copy clicked");
-    const selectedContent = "Selected content to copy"; // Replace with actual selection logic
-    setCopiedContent(selectedContent);
-    setClipboardAction("copy");
-  }, []);
-
-  const handleCut = useCallback(() => {
-    console.log("Cut clicked");
-    const cutContent = "Selected content to cut"; // Replace with actual selection logic
-    setCopiedContent(cutContent);
-    setClipboardAction("cut");
-  }, []);
-
-  const handlePaste = useCallback(() => {
-    if (clipboardAction && copiedContent) {
-      console.log("Paste clicked", {
-        action: clipboardAction,
-        content: copiedContent,
-      });
-      // Add your paste logic here
-      if (clipboardAction === "cut") {
-        setClipboardAction(null);
-        setCopiedContent(null);
-      }
+    if (activePageId !== undefined && activePageId !== null) {
+      redo(activePageId);
     }
-  }, [clipboardAction, copiedContent]);
+  }, [redo, activePageId]);
 
-  const handleRefresh = useCallback(() => {
-    console.log("Refresh clicked");
-    window.location.reload();
-  }, []);
+  // Removed unused handleCopy
 
-  const handleSelectChange = useCallback((value: string) => {
-    console.log("Selected:", value);
-  }, []);
+  // Removed unused handleCut
+
+  // Removed unused handlePaste
+
+  // Commented out refresh handler
+  // const handleRefresh = useCallback(() => {
+  //   console.log("Refresh clicked");
+  //   window.location.reload();
+  // }, []);
+
+  // Removed unused handleSelectChange
 
   const handleSave = async () => {
     if (jsonText) {
-      const response = await saveData(jsonText);
+      const response = await saveData(PROJECT_NAME, jsonText);
       if (response.status === 200) {
         alert(response.data?.message);
       }
@@ -190,7 +177,7 @@ const SubHeader: FC = () => {
     try {
       setDeploying(true);
 
-      const jsonString = exportJSON();
+      const jsonString = exportProjectJSON(PROJECT_NAME);
       const json = JSON.parse(jsonString);
 
       if (!json || json.length === 0) {
@@ -198,7 +185,7 @@ const SubHeader: FC = () => {
         return;
       }
 
-      const response = await deployApp("sample-project", json);
+      const response = await deployApp(PROJECT_NAME, json);
 
       alert("🚀 Deployment Started in GitHub Actions!");
       console.log(response);
@@ -212,23 +199,20 @@ const SubHeader: FC = () => {
 
   // Handler to open preview in new tab
   const handlePreview = useCallback(() => {
-    window.open("/preview?project=sample-project", "_blank");
+    window.open(`/preview?project=${PROJECT_NAME}`, "_blank");
   }, []);
 
-  // Memoized values
-  const isPasteEnabled = useMemo(
-    () => clipboardAction !== null && copiedContent !== null,
-    [clipboardAction, copiedContent],
-  );
+  const handleLaptopView = useCallback(() => {
+    setSelectedView("Lap View");
+  }, [setSelectedView]);
 
-  const iconStyle = useMemo(() => ({ color: ICON_COLOR }), []);
-  const pasteIconStyle = useMemo(
-    () => ({
-      color: isPasteEnabled ? ICON_COLOR : DISABLED_COLOR,
-      transition: "color 0.2s ease-in-out",
-    }),
-    [isPasteEnabled],
-  );
+  const handleMobileView = useCallback(() => {
+    setSelectedView("Mobile View");
+  }, [setSelectedView]);
+
+  const handleTabletView = useCallback(() => {
+    setSelectedView("Tablet View");
+  }, [setSelectedView]);
 
   return (
     <div className="mwl-subheader-container">
@@ -236,63 +220,79 @@ const SubHeader: FC = () => {
         <div className="mwl-subheader-title">{PROJECT_NAME}</div>
         <div className="mwl-subheader-main-container">
           <div className="mwl-subheader-icons">
-            <IconWrapper onClick={handleSettings}>
-              <SettingsIcon sx={iconStyle} />
+            {/* <IconWrapper onClick={handleSettings}>
+              <IoSettingsOutline color={ICON_COLOR} size={20} />
+            </IconWrapper> */}
+            <IconWrapper onClick={handleUndo} title="Undo">
+              <LuUndo2 color={ICON_COLOR} size={20} />
             </IconWrapper>
-            <IconWrapper onClick={handleUndo}>
-              <Undo color="#757575" />
+            <IconWrapper onClick={handleRedo} title="Redo">
+              <LuRedo2 color={ICON_COLOR} size={20} />
             </IconWrapper>
-            <IconWrapper onClick={handleRedo}>
-              <Redo color="#757575" />
-            </IconWrapper>
-            <IconWrapper onClick={handleCopy}>
-              <ContentCopyIcon sx={iconStyle} />
+            {/* Commented this code for suggestion */}
+            {/* <IconWrapper onClick={handleCopy}>
+              <MdContentCopy color={ICON_COLOR} size={20} />
             </IconWrapper>
             <IconWrapper onClick={handleCut}>
-              <ContentCutIcon sx={iconStyle} />
+              <IoMdCut color={ICON_COLOR} size={20} />
             </IconWrapper>
             <IconWrapper onClick={handlePaste} disabled={!isPasteEnabled}>
-              <ContentPasteIcon sx={pasteIconStyle} />
-            </IconWrapper>
-            <MWLSelectField
+              <MdContentPaste
+                color={isPasteEnabled ? ICON_COLOR : DISABLED_COLOR}
+                size={20}
+              />
+            </IconWrapper> */}
+            {/* <MWLSelectField
               options={VIEW_OPTIONS}
               size="small"
               selectChangeHandler={handleSelectChange}
               placeholder="Select option"
               width="70px"
-            />
-            <IconWrapper onClick={handleRefresh}>
-              <RefreshIcon sx={iconStyle} />
+            /> */}
+            {/* Commented this code for needed */}
+            {/* <IconWrapper onClick={handleRefresh}>
+              <MdOutlineRefresh color={ICON_COLOR} size={20} />
+            </IconWrapper>*/}
+            <IconWrapper onClick={handleMobileView} title="Mobile View">
+              <MdTabletAndroid
+                color={
+                  selectedView === "Mobile View" ? ICON_COLOR : DISABLED_COLOR
+                }
+                size={20}
+              />
             </IconWrapper>
-            <IconWrapper>
-              <LaptopIcon sx={iconStyle} />
+            <IconWrapper onClick={handleTabletView} title="Tablet View">
+              <FaTabletAlt
+                color={
+                  selectedView === "Tablet View" ? ICON_COLOR : DISABLED_COLOR
+                }
+                size={20}
+              />
             </IconWrapper>
-            <IconWrapper>
-              <TabletAndroidIcon sx={iconStyle} />
+            <IconWrapper onClick={handleLaptopView} title="Laptop View">
+              <MdOutlineLaptopMac
+                color={
+                  selectedView === "Lap View" ? ICON_COLOR : DISABLED_COLOR
+                }
+                size={20}
+              />
             </IconWrapper>
           </div>
           <div
             className="mwl-subheader-right-icons"
             style={{ display: "flex", alignItems: "center", gap: 8 }}
           >
-            <IconWrapper onClick={handlePreview}>
-              <RemoveRedEyeIcon sx={iconStyle} />
+            <IconWrapper onClick={handlePreview} title="Preview">
+              <IoMdEye size={20} color={ICON_COLOR} />
             </IconWrapper>
-            <IconWrapper onClick={handleExportJSON}>
-              <IosShareIcon sx={iconStyle} />
+            <IconWrapper onClick={handleExportJSON} title="Export JSON">
+              <PiExportBold size={20} color={ICON_COLOR} />
             </IconWrapper>
-            <MWLButton
-              text="Preview JSON"
-              color="info"
-              variant="outlined"
-              handleClick={handleOpenJsonDialog}
-              style={{ marginRight: 8 }}
-            />
-            <MWLButton
-              text="Import JSON"
-              color="info"
-              variant="outlined"
-              handleClick={() => {
+            <IconWrapper onClick={handleOpenJsonDialog} title="Edit JSON">
+              <BsFiletypeJson size={20} color={ICON_COLOR} />
+            </IconWrapper>
+            <IconWrapper
+              onClick={() => {
                 const input = document.createElement("input");
                 input.type = "file";
                 input.accept = ".json,application/json";
@@ -303,7 +303,20 @@ const SubHeader: FC = () => {
                   reader.onload = (event) => {
                     try {
                       const json = event.target?.result as string;
-                      importJSON(json);
+                      let parsed;
+                      try {
+                        parsed = JSON.parse(json);
+                      } catch (error) {
+                        alert("Invalid JSON file.");
+                        console.error("Failed to parse JSON from file:", error);
+                        return;
+                      }
+                      if (parsed && Array.isArray(parsed.pages)) {
+                        importProjectJSON(json);
+                      } else {
+                        importJSON(json, 0);
+                      }
+                      setJsonText(json);
                     } catch (err) {
                       alert("Invalid JSON file.");
                       console.error("Failed to import JSON from file:", err);
@@ -313,8 +326,10 @@ const SubHeader: FC = () => {
                 };
                 input.click();
               }}
-              style={{ marginRight: 8 }}
-            />
+              title="Import JSON"
+            >
+              <LuImport size={20} color={ICON_COLOR} />
+            </IconWrapper>
             <Dialog
               open={jsonDialogOpen}
               onClose={handleCloseJsonDialog}
@@ -355,27 +370,16 @@ const SubHeader: FC = () => {
                 </Button>
               </DialogActions>
             </Dialog>
-            <MWLButton
-              text="Clear"
-              color="secondary"
-              variant="outlined"
-              handleClick={handleClear}
-              style={{ marginRight: 8 }}
-            />
-            <MWLButton
-              text="Save"
-              color="primary"
-              variant="contained"
-              startIcon={<SaveIcon />}
-              handleClick={handleSave}
-            />
-            <MWLButton
-              text={deploying ? "Deploying..." : "Deploy"}
-              color="success"
-              variant="outlined"
-              handleClick={handleDeploy}
+            <IconWrapper onClick={handleSave} title="Save">
+              <FaSave color={ICON_COLOR} size={20} />
+            </IconWrapper>
+            <IconWrapper
               disabled={deploying}
-            />
+              onClick={handleDeploy}
+              title="Deploy"
+            >
+              <GrDeploy color={ICON_COLOR} size={20} />
+            </IconWrapper>
           </div>
         </div>
       </div>
