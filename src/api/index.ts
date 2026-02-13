@@ -38,3 +38,13 @@ export const deployApp = async (projectName: string, pageJson: any) => {
     throw error;
   }
 };
+
+export const deployAppStatus = async () => {
+  try {
+    const response = await axios.get(`${apiUrl}deploy/status`);
+    return response;
+  } catch (error) {
+    console.error("Error fetching deploy status:", error);
+    throw error;
+  }
+};
