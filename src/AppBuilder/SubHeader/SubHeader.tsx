@@ -7,23 +7,22 @@ import DialogActions from "@mui/material/DialogActions";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import "./SubHeader.css";
-// Removed unused MUI and react-web-white-label icon imports
 import { useBuilderStore } from "@/lib/store";
 import { LuUndo2, LuRedo2, LuImport } from "react-icons/lu";
 import { IoMdEye } from "react-icons/io";
 import { MdOutlineLaptopMac, MdTabletAndroid } from "react-icons/md";
 import { BsFiletypeJson } from "react-icons/bs";
-// Removed unused FaFileExport, FaFileImport
 import { FaSave, FaTabletAlt } from "react-icons/fa";
 import { PiExportBold } from "react-icons/pi";
 import { usePagesStore } from "@/lib/pagesStore";
-import { deployApp, saveData } from "@/api";
+import { deployApp, saveData, deployAppStatus } from "@/api";
 import { GrDeploy } from "react-icons/gr";
+import { Toaster, toast } from "sonner";
 
 // Constants
 const ICON_COLOR = "#757575";
 const DISABLED_COLOR = "#BDBDBD";
-const PROJECT_NAME = "krish-commerce";
+const PROJECT_NAME = "sample-two";
 
 // Removed unused VIEW_OPTIONS
 
@@ -60,6 +59,7 @@ IconWrapper.displayName = "IconWrapper";
 const SubHeader: FC = () => {
   const exportProjectJSON = useBuilderStore((state) => state.exportProjectJSON);
   const [deploying, setDeploying] = useState(false);
+  const setDeployStatus = useBuilderStore((state) => state.setDeployStatus);
   const importJSON = useBuilderStore((state) => state.importJSON);
   const importProjectJSON = useBuilderStore((state) => state.importProjectJSON);
   const undo = useBuilderStore((state) => state.undo);
@@ -115,6 +115,7 @@ const SubHeader: FC = () => {
       setJsonText(text);
     } catch {}
   }, []);
+
   // Handler to clear all components
   // Removed unused handleClear
   // Handler to export JSON
@@ -135,7 +136,6 @@ const SubHeader: FC = () => {
 
   // Action handlers
   // Removed unused handleSettings
-
   const handleUndo = useCallback(() => {
     if (activePageId !== undefined && activePageId !== null) {
       undo(activePageId);
@@ -148,51 +148,63 @@ const SubHeader: FC = () => {
     }
   }, [redo, activePageId]);
 
-  // Removed unused handleCopy
-
-  // Removed unused handleCut
-
-  // Removed unused handlePaste
-
-  // Commented out refresh handler
-  // const handleRefresh = useCallback(() => {
-  //   console.log("Refresh clicked");
-  //   window.location.reload();
-  // }, []);
-
-  // Removed unused handleSelectChange
-
   const handleSave = async () => {
     if (jsonText) {
       const response = await saveData(PROJECT_NAME, jsonText);
       if (response.status === 200) {
-        alert(response.data?.message);
+        toast.success(response.data?.message);
       }
     } else {
-      console.log("No JSON data to save");
+      toast.warning("No JSON data to save");
     }
   };
 
   const handleDeploy = async () => {
     try {
       setDeploying(true);
+      toast.info("Starting deployment...");
 
       const jsonString = exportProjectJSON(PROJECT_NAME);
       const json = JSON.parse(jsonString);
 
       if (!json || json.length === 0) {
-        alert("⚠ Nothing to deploy");
+        toast.warning("Nothing to deploy");
+        setDeploying(false);
         return;
       }
 
-      const response = await deployApp(PROJECT_NAME, json);
+      await deployApp(PROJECT_NAME, json);
 
-      alert("🚀 Deployment Started in GitHub Actions!");
-      console.log(response);
+      // ⭐ Start polling status
+      const interval = setInterval(async () => {
+        try {
+          const res = await deployAppStatus();
+          const data = res.data;
+
+          setDeployStatus(data.status);
+
+          if (data.status === "completed") {
+            clearInterval(interval);
+            setDeploying(false);
+            setDeployStatus(data.status);
+
+            if (data.conclusion === "success") {
+              const liveUrl = `https://purple-bay-04c42c110.2.azurestaticapps.net`;
+              toast.success(`Deployment Completed!`, {
+                description: `Live URL: ${liveUrl}`,
+              });
+            } else {
+              toast.error("Deployment Failed");
+            }
+          }
+        } catch (err) {
+          console.error(err);
+          toast.error("Error fetching deploy status");
+        }
+      }, 5000); // check every 5 sec
     } catch (err) {
       console.error(err);
-      alert("❌ Deployment failed");
-    } finally {
+      toast.error("Deployment failed");
       setDeploying(false);
     }
   };
@@ -220,39 +232,12 @@ const SubHeader: FC = () => {
         <div className="mwl-subheader-title">{PROJECT_NAME}</div>
         <div className="mwl-subheader-main-container">
           <div className="mwl-subheader-icons">
-            {/* <IconWrapper onClick={handleSettings}>
-              <IoSettingsOutline color={ICON_COLOR} size={20} />
-            </IconWrapper> */}
             <IconWrapper onClick={handleUndo} title="Undo">
               <LuUndo2 color={ICON_COLOR} size={20} />
             </IconWrapper>
             <IconWrapper onClick={handleRedo} title="Redo">
               <LuRedo2 color={ICON_COLOR} size={20} />
             </IconWrapper>
-            {/* Commented this code for suggestion */}
-            {/* <IconWrapper onClick={handleCopy}>
-              <MdContentCopy color={ICON_COLOR} size={20} />
-            </IconWrapper>
-            <IconWrapper onClick={handleCut}>
-              <IoMdCut color={ICON_COLOR} size={20} />
-            </IconWrapper>
-            <IconWrapper onClick={handlePaste} disabled={!isPasteEnabled}>
-              <MdContentPaste
-                color={isPasteEnabled ? ICON_COLOR : DISABLED_COLOR}
-                size={20}
-              />
-            </IconWrapper> */}
-            {/* <MWLSelectField
-              options={VIEW_OPTIONS}
-              size="small"
-              selectChangeHandler={handleSelectChange}
-              placeholder="Select option"
-              width="70px"
-            /> */}
-            {/* Commented this code for needed */}
-            {/* <IconWrapper onClick={handleRefresh}>
-              <MdOutlineRefresh color={ICON_COLOR} size={20} />
-            </IconWrapper>*/}
             <IconWrapper onClick={handleMobileView} title="Mobile View">
               <MdTabletAndroid
                 color={
@@ -383,6 +368,7 @@ const SubHeader: FC = () => {
           </div>
         </div>
       </div>
+      <Toaster richColors />
     </div>
   );
 };
