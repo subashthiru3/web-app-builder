@@ -22,7 +22,7 @@ import { Toaster, toast } from "sonner";
 // Constants
 const ICON_COLOR = "#757575";
 const DISABLED_COLOR = "#BDBDBD";
-const PROJECT_NAME = "sample-two";
+const PROJECT_NAME = "sample-three";
 
 // Removed unused VIEW_OPTIONS
 
@@ -72,7 +72,6 @@ const SubHeader: FC = () => {
   const [jsonDialogOpen, setJsonDialogOpen] = useState(false);
   const [jsonText, setJsonText] = useState("");
   const [jsonError, setJsonError] = useState("");
-  console.log("SubHeader render start", jsonText);
   // Handler to open JSON dialog
   const handleOpenJsonDialog = useCallback(() => {
     setJsonText(exportProjectJSON(PROJECT_NAME));
@@ -85,7 +84,6 @@ const SubHeader: FC = () => {
     setJsonDialogOpen(false);
     setJsonError("");
   }, []);
-  console.log("SubHeader rendered", jsonText);
   // Handler to save edited JSON
   const handleSaveJsonDialog = useCallback(() => {
     try {
@@ -162,20 +160,34 @@ const SubHeader: FC = () => {
   const handleDeploy = async () => {
     try {
       setDeploying(true);
-      toast.info("Starting deployment...");
+      toast.info("Saving project before deployment...");
 
       const jsonString = exportProjectJSON(PROJECT_NAME);
-      const json = JSON.parse(jsonString);
 
-      if (!json || json.length === 0) {
+      if (!jsonString) {
         toast.warning("Nothing to deploy");
         setDeploying(false);
         return;
       }
 
+      // ✅ 1. SAVE FIRST
+      const saveResponse = await saveData(PROJECT_NAME, jsonString);
+
+      if (saveResponse.status !== 200) {
+        toast.error("Failed to save project");
+        setDeploying(false);
+        return;
+      }
+
+      toast.success("Project saved successfully");
+
+      // ✅ 2. START DEPLOY
+      toast.info("Starting deployment...!");
+
+      const json = JSON.parse(jsonString);
       await deployApp(PROJECT_NAME, json);
 
-      // ⭐ Start polling status
+      // ✅ 3. POLL DEPLOY STATUS
       const interval = setInterval(async () => {
         try {
           const res = await deployAppStatus();
@@ -186,13 +198,15 @@ const SubHeader: FC = () => {
           if (data.status === "completed") {
             clearInterval(interval);
             setDeploying(false);
-            setDeployStatus(data.status);
 
             if (data.conclusion === "success") {
-              const liveUrl = `https://purple-bay-04c42c110.2.azurestaticapps.net`;
-              toast.success(`Deployment Completed!`, {
+              const liveUrl = `https://purple-bay-04c42c110.2.azurestaticapps.net/preview?project=${PROJECT_NAME}`;
+
+              toast.success("Deployment Completed!", {
                 description: `Live URL: ${liveUrl}`,
               });
+
+              // window.open(liveUrl, "_blank");
             } else {
               toast.error("Deployment Failed");
             }
@@ -200,8 +214,10 @@ const SubHeader: FC = () => {
         } catch (err) {
           console.error(err);
           toast.error("Error fetching deploy status");
+          clearInterval(interval);
+          setDeploying(false);
         }
-      }, 5000); // check every 5 sec
+      }, 5000);
     } catch (err) {
       console.error(err);
       toast.error("Deployment failed");
@@ -368,7 +384,7 @@ const SubHeader: FC = () => {
           </div>
         </div>
       </div>
-      <Toaster richColors />
+      <Toaster richColors position="top-center" closeButton />
     </div>
   );
 };
