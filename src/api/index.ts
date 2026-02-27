@@ -48,3 +48,34 @@ export const deployAppStatus = async () => {
     throw error;
   }
 };
+
+export const createNewProject = async (
+  appName: string,
+  resourceGroup: string,
+) => {
+  const payload = {
+    appName,
+    resourceGroup,
+    location: "centralus",
+    sku: "free",
+  };
+  try {
+    const response = await axios.post(`${apiUrl}azure/staticwebapp`, payload);
+    return response;
+  } catch (error) {
+    console.error("Error saving data:", error);
+    throw error;
+  }
+};
+
+export const deployCreateProjectStatus = async (deploymentId: string) => {
+  try {
+    const response = await axios.get(
+      `${apiUrl}azure/deployments/${deploymentId}/status`,
+    );
+    return response;
+  } catch (error) {
+    console.error("Error fetching deploy status:", error);
+    throw error;
+  }
+};

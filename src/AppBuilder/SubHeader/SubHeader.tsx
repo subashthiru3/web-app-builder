@@ -14,15 +14,23 @@ import { MdOutlineLaptopMac, MdTabletAndroid } from "react-icons/md";
 import { BsFiletypeJson } from "react-icons/bs";
 import { FaSave, FaTabletAlt } from "react-icons/fa";
 import { PiExportBold } from "react-icons/pi";
+import { FcWorkflow } from "react-icons/fc";
+import { AiOutlineDeploymentUnit } from "react-icons/ai";
 import { usePagesStore } from "@/lib/pagesStore";
-import { deployApp, saveData, deployAppStatus } from "@/api";
+import {
+  deployApp,
+  saveData,
+  deployAppStatus,
+  createNewProject,
+  deployCreateProjectStatus,
+} from "@/api";
 import { GrDeploy } from "react-icons/gr";
 import { Toaster, toast } from "sonner";
 
 // Constants
 const ICON_COLOR = "#757575";
 const DISABLED_COLOR = "#BDBDBD";
-const PROJECT_NAME = "sample-three";
+const PROJECT_NAME = "sample-six";
 
 // Removed unused VIEW_OPTIONS
 
@@ -177,50 +185,136 @@ const SubHeader: FC = () => {
         toast.error("Failed to save project");
         setDeploying(false);
         return;
+      } else {
+        // toast.success("Project saved successfully");
+        const liveUrl =
+          process.env.NODE_ENV === "production"
+            ? `https://purple-bay-04c42c110.2.azurestaticapps.net/preview?project=${PROJECT_NAME}`
+            : `http://localhost:3000/preview?project=${PROJECT_NAME}`;
+
+        toast.success("Deployment Completed!", {
+          description: `Live URL: ${liveUrl}`,
+        });
       }
 
-      toast.success("Project saved successfully");
-
       // ✅ 2. START DEPLOY
-      toast.info("Starting deployment...!");
+      // toast.info("Starting deployment...!");
 
-      const json = JSON.parse(jsonString);
-      await deployApp(PROJECT_NAME, json);
+      // const json = JSON.parse(jsonString);
+      // await deployApp(PROJECT_NAME, json);
 
       // ✅ 3. POLL DEPLOY STATUS
-      const interval = setInterval(async () => {
-        try {
-          const res = await deployAppStatus();
-          const data = res.data;
+      // const interval = setInterval(async () => {
+      //   try {
+      //     const res = await deployAppStatus();
+      //     const data = res.data;
 
-          setDeployStatus(data.status);
+      //     setDeployStatus(data.status);
 
-          if (data.status === "completed") {
-            clearInterval(interval);
-            setDeploying(false);
+      //     if (data.status === "completed") {
+      //       clearInterval(interval);
+      //       setDeploying(false);
 
-            if (data.conclusion === "success") {
-              const liveUrl = `https://purple-bay-04c42c110.2.azurestaticapps.net/preview?project=${PROJECT_NAME}`;
+      //       if (data.conclusion === "success") {
+      //         const liveUrl = `https://purple-bay-04c42c110.2.azurestaticapps.net/preview?project=${PROJECT_NAME}`;
 
-              toast.success("Deployment Completed!", {
-                description: `Live URL: ${liveUrl}`,
-              });
+      //         toast.success("Deployment Completed!", {
+      //           description: `Live URL: ${liveUrl}`,
+      //         });
 
-              // window.open(liveUrl, "_blank");
-            } else {
-              toast.error("Deployment Failed");
-            }
-          }
-        } catch (err) {
-          console.error(err);
-          toast.error("Error fetching deploy status");
-          clearInterval(interval);
-          setDeploying(false);
-        }
-      }, 5000);
+      //         // window.open(liveUrl, "_blank");
+      //       } else {
+      //         toast.error("Deployment Failed");
+      //       }
+      //     }
+      //   } catch (err) {
+      //     console.error(err);
+      //     toast.error("Error fetching deploy status");
+      //     clearInterval(interval);
+      //     setDeploying(false);
+      //   }
+      // }, 5000);
     } catch (err) {
       console.error(err);
       toast.error("Deployment failed");
+      setDeploying(false);
+    }
+  };
+
+  const handleCreateNewProject = async () => {
+    const appName = `portfolio-${Math.floor(Math.random() * 1000)}`;
+    try {
+      const jsonString = exportProjectJSON(PROJECT_NAME);
+
+      if (!jsonString) {
+        toast.warning("Nothing to deploy");
+        setDeploying(false);
+        return;
+      }
+
+      // ✅ 1. SAVE FIRST
+      const saveResponse = await saveData(PROJECT_NAME, jsonString);
+
+      if (saveResponse.status !== 200) {
+        toast.error("Failed to save project");
+        setDeploying(false);
+        return;
+      } else {
+        const res = await createNewProject(appName, "azure-workout");
+        if (res.status === 200) {
+          // ✅ 2. START DEPLOYMENT
+          toast.info("Starting deployment...");
+
+          const deploymentId = res.data.deploymentId;
+
+          if (!deploymentId) {
+            toast.error("Failed to start deployment");
+            setDeploying(false);
+            return;
+          }
+
+          toast.info("Deployment in progress...");
+          setDeploying(true);
+
+          // ✅ 3. POLL DEPLOY STATUS
+          const interval = setInterval(async () => {
+            try {
+              const statusRes = await deployCreateProjectStatus(deploymentId);
+              const status = statusRes.data.status;
+
+              if (status === "SUCCESS") {
+                clearInterval(interval);
+                setDeploying(false);
+
+                const liveUrl =
+                  process.env.NODE_ENV === "production"
+                    ? `https://purple-bay-04c42c110.2.azurestaticapps.net/preview?project=${appName}`
+                    : `http://localhost:3000/preview?project=${appName}`;
+
+                toast.success("Deployment Completed 🎉", {
+                  description: `Live URL: ${liveUrl}`,
+                });
+              }
+
+              if (status === "FAILED") {
+                clearInterval(interval);
+                setDeploying(false);
+                toast.error("Deployment Failed ❌");
+              }
+            } catch (err) {
+              console.error(err);
+              clearInterval(interval);
+              setDeploying(false);
+              toast.error("Error checking deployment status");
+            }
+          }, 5000);
+        } else {
+          toast.error("Failed to create new project");
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to create and deploy project");
       setDeploying(false);
     }
   };
@@ -374,12 +468,15 @@ const SubHeader: FC = () => {
             <IconWrapper onClick={handleSave} title="Save">
               <FaSave color={ICON_COLOR} size={20} />
             </IconWrapper>
-            <IconWrapper
+            {/* <IconWrapper
               disabled={deploying}
               onClick={handleDeploy}
               title="Deploy"
             >
               <GrDeploy color={ICON_COLOR} size={20} />
+            </IconWrapper> */}
+            <IconWrapper onClick={handleCreateNewProject} title="New Project">
+              <AiOutlineDeploymentUnit size={20} />
             </IconWrapper>
           </div>
         </div>
