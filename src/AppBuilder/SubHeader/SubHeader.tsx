@@ -14,17 +14,10 @@ import { MdOutlineLaptopMac, MdTabletAndroid } from "react-icons/md";
 import { BsFiletypeJson } from "react-icons/bs";
 import { FaSave, FaTabletAlt } from "react-icons/fa";
 import { PiExportBold } from "react-icons/pi";
-import { FcWorkflow } from "react-icons/fc";
 import { AiOutlineDeploymentUnit } from "react-icons/ai";
+import { LuCopy } from "react-icons/lu";
 import { usePagesStore } from "@/lib/pagesStore";
-import {
-  deployApp,
-  saveData,
-  deployAppStatus,
-  createNewProject,
-  deployCreateProjectStatus,
-} from "@/api";
-import { GrDeploy } from "react-icons/gr";
+import { saveData, createNewProject, deployCreateProjectStatus } from "@/api";
 import { Toaster, toast } from "sonner";
 
 // Constants
@@ -32,10 +25,7 @@ const ICON_COLOR = "#757575";
 const DISABLED_COLOR = "#BDBDBD";
 const PROJECT_NAME = "sample-six";
 
-// Removed unused VIEW_OPTIONS
-
 // Reusable icon wrapper component
-
 const IconWrapper: FC<{
   onClick?: () => void;
   disabled?: boolean;
@@ -165,106 +155,28 @@ const SubHeader: FC = () => {
     }
   };
 
-  const handleDeploy = async () => {
-    try {
-      setDeploying(true);
-      toast.info("Saving project before deployment...");
-
-      const jsonString = exportProjectJSON(PROJECT_NAME);
-
-      if (!jsonString) {
-        toast.warning("Nothing to deploy");
-        setDeploying(false);
-        return;
-      }
-
-      // ✅ 1. SAVE FIRST
-      const saveResponse = await saveData(PROJECT_NAME, jsonString);
-
-      if (saveResponse.status !== 200) {
-        toast.error("Failed to save project");
-        setDeploying(false);
-        return;
-      } else {
-        // toast.success("Project saved successfully");
-        const liveUrl =
-          process.env.NODE_ENV === "production"
-            ? `https://purple-bay-04c42c110.2.azurestaticapps.net/preview?project=${PROJECT_NAME}`
-            : `http://localhost:3000/preview?project=${PROJECT_NAME}`;
-
-        toast.success("Deployment Completed!", {
-          description: `Live URL: ${liveUrl}`,
-        });
-      }
-
-      // ✅ 2. START DEPLOY
-      // toast.info("Starting deployment...!");
-
-      // const json = JSON.parse(jsonString);
-      // await deployApp(PROJECT_NAME, json);
-
-      // ✅ 3. POLL DEPLOY STATUS
-      // const interval = setInterval(async () => {
-      //   try {
-      //     const res = await deployAppStatus();
-      //     const data = res.data;
-
-      //     setDeployStatus(data.status);
-
-      //     if (data.status === "completed") {
-      //       clearInterval(interval);
-      //       setDeploying(false);
-
-      //       if (data.conclusion === "success") {
-      //         const liveUrl = `https://purple-bay-04c42c110.2.azurestaticapps.net/preview?project=${PROJECT_NAME}`;
-
-      //         toast.success("Deployment Completed!", {
-      //           description: `Live URL: ${liveUrl}`,
-      //         });
-
-      //         // window.open(liveUrl, "_blank");
-      //       } else {
-      //         toast.error("Deployment Failed");
-      //       }
-      //     }
-      //   } catch (err) {
-      //     console.error(err);
-      //     toast.error("Error fetching deploy status");
-      //     clearInterval(interval);
-      //     setDeploying(false);
-      //   }
-      // }, 5000);
-    } catch (err) {
-      console.error(err);
-      toast.error("Deployment failed");
-      setDeploying(false);
-    }
-  };
-
   const handleCreateNewProject = async () => {
+    setDeployStatus("in_progress");
     const appName = `portfolio-${Math.floor(Math.random() * 1000)}`;
-    try {
-      const jsonString = exportProjectJSON(PROJECT_NAME);
+    const jsonString = exportProjectJSON(appName);
 
-      if (!jsonString) {
-        toast.warning("Nothing to deploy");
-        setDeploying(false);
-        return;
-      }
+    if (!jsonString) {
+      toast.warning("Nothing to deploy");
+      setDeploying(false);
+      return;
+    }
+    // ✅ 1. SAVE FIRST
+    const saveResponse = await saveData(appName, jsonString);
 
-      // ✅ 1. SAVE FIRST
-      const saveResponse = await saveData(PROJECT_NAME, jsonString);
-
-      if (saveResponse.status !== 200) {
-        toast.error("Failed to save project");
-        setDeploying(false);
-        return;
-      } else {
+    if (saveResponse.status !== 200) {
+      toast.error("Failed to save project");
+      setDeploying(false);
+      return;
+    } else {
+      try {
         const res = await createNewProject(appName, "azure-workout");
         if (res.status === 200) {
           // ✅ 2. START DEPLOYMENT
-          toast.info("Starting deployment...");
-
           const deploymentId = res.data.deploymentId;
 
           if (!deploymentId) {
@@ -281,41 +193,109 @@ const SubHeader: FC = () => {
             try {
               const statusRes = await deployCreateProjectStatus(deploymentId);
               const status = statusRes.data.status;
+              const azureStaticUrl = statusRes.data.azureStaticUrl;
 
               if (status === "SUCCESS") {
                 clearInterval(interval);
                 setDeploying(false);
+                setDeployStatus("success");
 
-                const liveUrl =
-                  process.env.NODE_ENV === "production"
-                    ? `https://purple-bay-04c42c110.2.azurestaticapps.net/preview?project=${appName}`
-                    : `http://localhost:3000/preview?project=${appName}`;
+                const generatedUrl = `${azureStaticUrl}/preview?project=${appName}`;
+                toast.custom(
+                  (t) => (
+                    <div
+                      style={{
+                        background: "white",
+                        padding: "16px",
+                        borderRadius: "12px",
+                        width: "420px",
+                        boxShadow: "0 10px 30px rgba(0,0,0,0.1)",
+                      }}
+                    >
+                      <div style={{ fontWeight: 600, marginBottom: 10 }}>
+                        🎉 Deployment Successful
+                      </div>
 
-                toast.success("Deployment Completed 🎉", {
-                  description: `Live URL: ${liveUrl}`,
-                });
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 10,
+                          background: "#f5f5f5",
+                          padding: "10px",
+                          borderRadius: 8,
+                          wordBreak: "break-all",
+                          fontSize: 13,
+                        }}
+                      >
+                        <span style={{ flex: 1 }}>{generatedUrl}</span>
+
+                        <button
+                          onClick={async () => {
+                            await navigator.clipboard.writeText(generatedUrl);
+                            toast.success("Copied to clipboard ✅");
+                          }}
+                          style={{
+                            background: "transparent",
+                            border: "none",
+                            cursor: "pointer",
+                          }}
+                        >
+                          <LuCopy size={18} />
+                        </button>
+                      </div>
+
+                      <div style={{ marginTop: 14, textAlign: "right" }}>
+                        <button
+                          onClick={() => toast.dismiss(t)}
+                          style={{
+                            background: "#111",
+                            color: "white",
+                            border: "none",
+                            padding: "6px 14px",
+                            borderRadius: 6,
+                            cursor: "pointer",
+                          }}
+                        >
+                          Close
+                        </button>
+                      </div>
+                    </div>
+                  ),
+                  {
+                    duration: Infinity, // 🔥 VERY IMPORTANT
+                  },
+                );
+
+                // const liveUrl = `${azureStaticUrl}/preview?project=${appName}`;
+
+                // toast.success("Deployment Completed 🎉", {
+                //   description: `Live URL: ${liveUrl}`,
+                // });
               }
 
               if (status === "FAILED") {
                 clearInterval(interval);
                 setDeploying(false);
+                setDeployStatus("failed");
                 toast.error("Deployment Failed ❌");
               }
             } catch (err) {
               console.error(err);
               clearInterval(interval);
               setDeploying(false);
+              setDeployStatus("failed");
               toast.error("Error checking deployment status");
             }
           }, 5000);
         } else {
           toast.error("Failed to create new project");
         }
+      } catch (err) {
+        console.error(err);
+        toast.error("Failed to create and deploy project");
+        setDeploying(false);
       }
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to create and deploy project");
-      setDeploying(false);
     }
   };
 
@@ -468,16 +448,15 @@ const SubHeader: FC = () => {
             <IconWrapper onClick={handleSave} title="Save">
               <FaSave color={ICON_COLOR} size={20} />
             </IconWrapper>
-            {/* <IconWrapper
-              disabled={deploying}
-              onClick={handleDeploy}
-              title="Deploy"
-            >
-              <GrDeploy color={ICON_COLOR} size={20} />
-            </IconWrapper> */}
-            <IconWrapper onClick={handleCreateNewProject} title="New Project">
-              <AiOutlineDeploymentUnit size={20} />
-            </IconWrapper>
+            <span className={deploying ? "rotating" : ""}>
+              <IconWrapper
+                disabled={deploying}
+                onClick={handleCreateNewProject}
+                title="Deploy"
+              >
+                <AiOutlineDeploymentUnit size={20} />
+              </IconWrapper>
+            </span>
           </div>
         </div>
       </div>
