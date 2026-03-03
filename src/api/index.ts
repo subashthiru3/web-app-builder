@@ -63,7 +63,24 @@ export const createNewProject = async (
     const response = await axios.post(`${apiUrl}azure/staticwebapp`, payload);
     return response;
   } catch (error) {
-    console.error("Error saving data:", error);
+    console.error("Error creating new project:", error);
+    throw error;
+  }
+};
+
+export const deployProject = async (appName: string, resourceGroup: string) => {
+  const payload = {
+    appName,
+    resourceGroup,
+  };
+  try {
+    const response = await axios.post(
+      `${apiUrl}azure/staticwebapp/deploy`,
+      payload,
+    );
+    return response;
+  } catch (error) {
+    console.error("Error deploying project:", error);
     throw error;
   }
 };

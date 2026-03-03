@@ -17,13 +17,18 @@ import { PiExportBold } from "react-icons/pi";
 import { AiOutlineDeploymentUnit } from "react-icons/ai";
 import { LuCopy } from "react-icons/lu";
 import { usePagesStore } from "@/lib/pagesStore";
-import { saveData, createNewProject, deployCreateProjectStatus } from "@/api";
+import {
+  saveData,
+  createNewProject,
+  deployCreateProjectStatus,
+  deployProject,
+} from "@/api";
 import { Toaster, toast } from "sonner";
 
 // Constants
 const ICON_COLOR = "#757575";
 const DISABLED_COLOR = "#BDBDBD";
-const PROJECT_NAME = "sample-six";
+const appName = `portfolio-one`;
 
 // Reusable icon wrapper component
 const IconWrapper: FC<{
@@ -72,7 +77,7 @@ const SubHeader: FC = () => {
   const [jsonError, setJsonError] = useState("");
   // Handler to open JSON dialog
   const handleOpenJsonDialog = useCallback(() => {
-    setJsonText(exportProjectJSON(PROJECT_NAME));
+    setJsonText(exportProjectJSON(appName));
     setJsonError("");
     setJsonDialogOpen(true);
   }, [exportProjectJSON]);
@@ -116,7 +121,7 @@ const SubHeader: FC = () => {
   // Removed unused handleClear
   // Handler to export JSON
   const handleExportJSON = useCallback(() => {
-    const json = exportProjectJSON(PROJECT_NAME);
+    const json = exportProjectJSON(appName);
     const blob = new Blob([json], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -146,7 +151,7 @@ const SubHeader: FC = () => {
 
   const handleSave = async () => {
     if (jsonText) {
-      const response = await saveData(PROJECT_NAME, jsonText);
+      const response = await saveData(appName, jsonText);
       if (response.status === 200) {
         toast.success(response.data?.message);
       }
@@ -155,9 +160,8 @@ const SubHeader: FC = () => {
     }
   };
 
-  const handleCreateNewProject = async () => {
+  const handleDeployProject = async () => {
     setDeployStatus("in_progress");
-    const appName = `portfolio-${Math.floor(Math.random() * 1000)}`;
     const jsonString = exportProjectJSON(appName);
 
     if (!jsonString) {
@@ -174,7 +178,7 @@ const SubHeader: FC = () => {
       return;
     } else {
       try {
-        const res = await createNewProject(appName, "azure-workout");
+        const res = await deployProject(appName, "azure-workout");
         if (res.status === 200) {
           // ✅ 2. START DEPLOYMENT
           const deploymentId = res.data.deploymentId;
@@ -266,12 +270,6 @@ const SubHeader: FC = () => {
                     duration: Infinity, // 🔥 VERY IMPORTANT
                   },
                 );
-
-                // const liveUrl = `${azureStaticUrl}/preview?project=${appName}`;
-
-                // toast.success("Deployment Completed 🎉", {
-                //   description: `Live URL: ${liveUrl}`,
-                // });
               }
 
               if (status === "FAILED") {
@@ -295,13 +293,28 @@ const SubHeader: FC = () => {
         console.error(err);
         toast.error("Failed to create and deploy project");
         setDeploying(false);
+        setDeployStatus("failed");
       }
+    }
+  };
+
+  const handleCreateNewProject = async () => {
+    try {
+      const res = await createNewProject(appName, "azure-workout");
+      if (res.status === 200) {
+        console.log("response from createNewProject:", res);
+
+        toast.info("Project created successfully.");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to create project");
     }
   };
 
   // Handler to open preview in new tab
   const handlePreview = useCallback(() => {
-    window.open(`/preview?project=${PROJECT_NAME}`, "_blank");
+    window.open(`/preview?project=${appName}`, "_blank");
   }, []);
 
   const handleLaptopView = useCallback(() => {
@@ -319,7 +332,7 @@ const SubHeader: FC = () => {
   return (
     <div className="mwl-subheader-container">
       <div className="mwl-subheader-assets">
-        <div className="mwl-subheader-title">{PROJECT_NAME}</div>
+        <div className="mwl-subheader-title">{appName}</div>
         <div className="mwl-subheader-main-container">
           <div className="mwl-subheader-icons">
             <IconWrapper onClick={handleUndo} title="Undo">
@@ -451,7 +464,7 @@ const SubHeader: FC = () => {
             <span className={deploying ? "rotating" : ""}>
               <IconWrapper
                 disabled={deploying}
-                onClick={handleCreateNewProject}
+                onClick={handleDeployProject}
                 title="Deploy"
               >
                 <AiOutlineDeploymentUnit size={20} />
