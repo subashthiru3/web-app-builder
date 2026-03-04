@@ -19,6 +19,7 @@
     "@mui/x-data-grid-premium": "^8.24.0",
     "@mui/x-data-grid-pro": "^8.26.0",
     "axios": "^1.13.4",
+    "clsx": "^2.1.1",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
     "lucide-react": "^0.563.0",
@@ -32,6 +33,7 @@
     "react-dom": "19.2.3",
     "react-icons": "^5.5.0",
     "react-web-white-label": "2.0.12",
+    "tailwind-merge": "^3.4.0",
     "sonner": "^2.0.7",
     "zustand": "^5.0.10"
   },

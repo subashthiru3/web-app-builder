@@ -5,7 +5,22 @@ import { CanvasComponent, ComponentType, ComponentProps } from "./types";
 import { getComponentSchema } from "./componentRegistry";
 import * as pagesStoreModule from "./pagesStore";
 
+export interface CanvasSettings {
+  columns: number;
+  width: string;
+  padding: string;
+  backgroundColor: string;
+  border: boolean;
+  borderColor: string;
+  borderSize: string;
+  borderRadius: string;
+  shadow: boolean;
+  visibility: string;
+}
+
 export interface BuilderStore {
+  canvasSettings: CanvasSettings;
+  setCanvasSettings: (settings: Partial<CanvasSettings>) => void;
   componentsByPage: {
     [pageId: number]: {
       id: number;
@@ -25,6 +40,8 @@ export interface BuilderStore {
     props: Partial<ComponentProps>,
     pageId: number,
   ) => void;
+  updateComponentWidth: (id: string, width: string, pageId: number) => void;
+  updateComponentHeight: (id: string, height: string, pageId: number) => void;
   reorderComponents: (
     fromIndex: number,
     toIndex: number,
@@ -44,6 +61,9 @@ export interface BuilderStore {
   selectedView: string;
   setSelectedView: (view: string) => void;
 
+  selectedSubView: string;
+  setSelectedSubView: (subView: string) => void;
+
   sideDrawerOpen: boolean;
   setSideDrawerOpen: (open: boolean) => void;
 
@@ -58,7 +78,25 @@ export interface BuilderStore {
 // Simple ID generator
 const generateId = () => Math.random().toString(36).substr(2, 9);
 
+const defaultCanvasSettings: CanvasSettings = {
+  columns: 1,
+  width: "Fill",
+  padding: "16px",
+  backgroundColor: "",
+  border: false,
+  borderColor: "#111827",
+  borderSize: "1px",
+  borderRadius: "0px",
+  shadow: false,
+  visibility: "100%",
+};
+
 export const useBuilderStore = create<BuilderStore>((set, get) => ({
+  canvasSettings: defaultCanvasSettings,
+  setCanvasSettings: (settings) =>
+    set((state) => ({
+      canvasSettings: { ...state.canvasSettings, ...settings },
+    })),
   componentsByPage: {},
   selectedComponentId: null,
   undoStack: {},
@@ -66,6 +104,9 @@ export const useBuilderStore = create<BuilderStore>((set, get) => ({
 
   selectedView: "Lap View",
   setSelectedView: (view) => set({ selectedView: view }),
+
+  selectedSubView: "",
+  setSelectedSubView: (subView) => set({ selectedSubView: subView }),
 
   sideDrawerOpen: true,
   setSideDrawerOpen: (open) => set({ sideDrawerOpen: open }),
@@ -107,9 +148,9 @@ export const useBuilderStore = create<BuilderStore>((set, get) => ({
           .catch(() => {
             // fallback to default name
           });
-      } catch (e) {
+      } catch (err) {
         // fallback to default name
-        console.error("Failed to get page name from pagesStore", e);
+        console.error("Failed to get page name from pagesStore", err);
       }
       const page = state.componentsByPage[pageId] ?? {
         id: pageId,
@@ -177,6 +218,60 @@ export const useBuilderStore = create<BuilderStore>((set, get) => ({
             ...page,
             components: page.components.map((c) =>
               c.id === id ? { ...c, props: { ...c.props, ...props } } : c,
+            ),
+          },
+        },
+        undoStack: {
+          ...state.undoStack,
+          [pageId]: [...(state.undoStack[pageId] || []), page.components],
+        },
+        redoStack: {
+          ...state.redoStack,
+          [pageId]: [],
+        },
+      };
+    });
+  },
+
+  updateComponentWidth: (id, width, pageId) => {
+    set((state) => {
+      const page = state.componentsByPage[pageId];
+      if (!page) return state;
+
+      return {
+        componentsByPage: {
+          ...state.componentsByPage,
+          [pageId]: {
+            ...page,
+            components: page.components.map((c) =>
+              c.id === id ? { ...c, width } : c,
+            ),
+          },
+        },
+        undoStack: {
+          ...state.undoStack,
+          [pageId]: [...(state.undoStack[pageId] || []), page.components],
+        },
+        redoStack: {
+          ...state.redoStack,
+          [pageId]: [],
+        },
+      };
+    });
+  },
+
+  updateComponentHeight: (id, height, pageId) => {
+    set((state) => {
+      const page = state.componentsByPage[pageId];
+      if (!page) return state;
+
+      return {
+        componentsByPage: {
+          ...state.componentsByPage,
+          [pageId]: {
+            ...page,
+            components: page.components.map((c) =>
+              c.id === id ? { ...c, height } : c,
             ),
           },
         },
@@ -381,17 +476,22 @@ export const useBuilderStore = create<BuilderStore>((set, get) => ({
               setNextPageId(maxPageId + 1);
             }
           })
-          .catch((e) => {
+          .catch((err) => {
+            // eslint-disable-next-line no-console
             console.error(
               "Failed to update pagesStore from importProjectJSON",
-              e,
+              err,
             );
           });
-      } catch (e) {
-        console.error("Failed to update pagesStore from importProjectJSON", e);
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error(
+          "Failed to update pagesStore from importProjectJSON",
+          err,
+        );
       }
-    } catch (e) {
-      console.error("Failed to import project JSON", e);
+    } catch (err) {
+      console.error("Failed to import project JSON", err);
     }
   },
 }));

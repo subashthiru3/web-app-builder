@@ -2,8 +2,10 @@
 
 export const dynamic = "force-dynamic";
 
-import { useBuilderStore } from "@/lib/store";
+import LoginPage from "@/AppBuilder/login/LoginPage";
 import dynamicImport from "next/dynamic";
+import { useAuthStore } from "@/lib/authStore";
+import { useBuilderStore } from "@/lib/store";
 import Loader from "./components/Loader/Loader";
 
 const AppBuilder = dynamicImport(() => import("@/AppBuilder/AppBuilder"), {
@@ -12,11 +14,12 @@ const AppBuilder = dynamicImport(() => import("@/AppBuilder/AppBuilder"), {
 
 export default function Home() {
   const deployStatus = useBuilderStore((state) => state.deployStatus);
+  const { isAuthenticated } = useAuthStore();
 
   return (
     <>
       {deployStatus === "in_progress" && <Loader />}
-      <AppBuilder />
+      {isAuthenticated ? <AppBuilder /> : <LoginPage />}
     </>
   );
 }

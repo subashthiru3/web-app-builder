@@ -16,6 +16,7 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
   label,
   icon,
 }) => {
+  const divRef = React.useRef<HTMLDivElement>(null);
   const sideDrawerOpen = useBuilderStore((state) => state.sideDrawerOpen);
 
   const [{ isDragging }, drag] = useDrag(() => ({
@@ -26,7 +27,6 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
     }),
   }));
 
-  const divRef = React.useRef<HTMLDivElement>(null);
   React.useEffect(() => {
     if (divRef.current) {
       drag(divRef.current);

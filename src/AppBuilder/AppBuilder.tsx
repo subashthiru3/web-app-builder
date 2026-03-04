@@ -12,6 +12,7 @@ import { Canvas } from "./Canvas/Canvas";
 // ...existing code...
 import { PropertiesPanel } from "./PropertyPanel/PropertiesPanel";
 import { useBuilderStore } from "@/lib/store";
+import { useAuth } from "@/lib/useAuth";
 
 const DrawerHeader = styled("div")(({ theme }) => ({
   display: "flex",
@@ -25,6 +26,7 @@ const DrawerHeader = styled("div")(({ theme }) => ({
 const AppBuilder: React.FC<AppBuilderProps> = ({}) => {
   const setSideDrawerOpen = useBuilderStore((state) => state.setSideDrawerOpen);
   const componentsByPage = useBuilderStore((state) => state.componentsByPage);
+  const { user, logout } = useAuth();
 
   // Sync all components from all pages to localStorage for preview
   useEffect(() => {
@@ -40,13 +42,14 @@ const AppBuilder: React.FC<AppBuilderProps> = ({}) => {
         <Header
           headerProps={{
             userData: {
-              userName: "John Doe",
-              userEmail: "john.doe@example.com",
+              userName: user?.name || "User",
+              userEmail: user?.email || "",
             },
             handleDrawerOpen: () => {
               const isOpen = useBuilderStore.getState().sideDrawerOpen;
               setSideDrawerOpen(!isOpen);
             },
+            handleLogout: logout,
           }}
         />
         <DrawerHeader />

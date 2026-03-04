@@ -25,7 +25,8 @@
   color: #1976d2;
   font-weight: 600;
 }
-.pages-popup input {
+.pages-popup input,
+.pages-popup textarea {
   padding: 8px 10px;
   border: 1px solid #cfd8dc;
   border-radius: 6px;
