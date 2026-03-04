@@ -1,10 +1,10 @@
 import axios from "axios";
 
-const apiUrl = process.env.NEXT_API_BASE_URL || "http://localhost:4000/api/";
+const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-export const saveData = async (data: any) => {
+export const saveData = async (projectName: string, data: any) => {
   const payload = {
-    projectName: "sample-grid",
+    projectName: projectName,
     pageJson: data,
   };
   try {
@@ -26,14 +26,73 @@ export const loadData = async (projectName: string) => {
   }
 };
 
-export const deployApp = async (projectName: string) => {
+export const deployApp = async (projectName: string, pageJson: any) => {
   try {
     const response = await axios.post(`${apiUrl}deploy`, {
       projectName,
+      pageJson,
     });
     return response.data;
   } catch (error) {
     console.error("Error deploying app:", error);
+    throw error;
+  }
+};
+
+export const deployAppStatus = async () => {
+  try {
+    const response = await axios.get(`${apiUrl}deploy/status`);
+    return response;
+  } catch (error) {
+    console.error("Error fetching deploy status:", error);
+    throw error;
+  }
+};
+
+export const createNewProject = async (
+  appName: string,
+  resourceGroup: string,
+) => {
+  const payload = {
+    appName,
+    resourceGroup,
+    location: "centralus",
+    sku: "free",
+  };
+  try {
+    const response = await axios.post(`${apiUrl}azure/staticwebapp`, payload);
+    return response;
+  } catch (error) {
+    console.error("Error creating new project:", error);
+    throw error;
+  }
+};
+
+export const deployProject = async (appName: string, resourceGroup: string) => {
+  const payload = {
+    appName,
+    resourceGroup,
+  };
+  try {
+    const response = await axios.post(
+      `${apiUrl}azure/staticwebapp/deploy`,
+      payload,
+    );
+    return response;
+  } catch (error) {
+    console.error("Error deploying project:", error);
+    throw error;
+  }
+};
+
+export const deployCreateProjectStatus = async (deploymentId: string) => {
+  try {
+    const response = await axios.get(
+      `${apiUrl}azure/deployments/${deploymentId}/status`,
+    );
+    return response;
+  } catch (error) {
+    console.error("Error fetching deploy status:", error);
     throw error;
   }
 };

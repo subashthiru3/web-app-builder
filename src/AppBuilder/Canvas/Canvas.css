@@ -1,0 +1,127 @@
+/* Canvas empty state message styles converted from Tailwind */
+.canvas-empty-message {
+  display: flex;
+  /* flex-direction: column; */
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+  color: #94a3b8; /* slate-400 */
+}
+.canvas-empty-title {
+  font-size: 1.125rem; /* text-lg */
+  font-weight: 500; /* font-medium */
+  margin-bottom: 0.5rem; /* mb-2 */
+}
+.canvas-empty-desc {
+  font-size: 0.875rem; /* text-sm */
+}
+/* Canvas component wrapper styles converted from Tailwind */
+.canvas-component-wrapper {
+  padding: 1rem;
+  border-width: 2px;
+  border-radius: 0.5rem;
+  transition: all 0.2s;
+  cursor: pointer;
+  border-color: #e5e7eb; /* slate-200 */
+}
+.canvas-component-wrapper:hover {
+  border-color: #cbd5e1; /* slate-300 */
+}
+.canvas-component-selected {
+  border-color: #3b82f6; /* blue-500 */
+  background-color: #eff6ff; /* blue-50 */
+  display: flex;
+  justify-content: space-between;
+}
+.canvas {
+  /* flex: 1; */
+  width: 65%;
+  min-height: 600px;
+  max-width: 1200px;
+  background: #fff;
+  border: 2px dashed #cbd5e1;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  overflow-y: auto;
+  transition:
+    border-color 0.2s,
+    background 0.2s;
+}
+
+.canvasOver {
+  border-color: #3b82f6;
+  background: #eff6ff;
+}
+
+.canvasDefault {
+  border-color: #cbd5e1;
+}
+
+.canvasFull {
+  width: 62%;
+  min-height: 600px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.canvasMobile {
+  width: 375px;
+  min-height: 667px;
+  margin: 0 auto;
+  border-radius: 1.5rem;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  background: #fff;
+}
+
+/* Tablet view for Canvas */
+.canvasTablet {
+  width: 768px;
+  margin: 0 auto;
+  border-radius: 1.25rem;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  background: #fff;
+}
+
+/* Responsive: apply .canvasTablet styles for tablet screens */
+@media (max-width: 1024px) and (min-width: 600px) {
+  .canvas {
+    width: 90%;
+    max-width: 768px;
+    min-height: 600px;
+    margin: 0 auto;
+    border-radius: 1.25rem;
+  }
+}
+
+.canvas-component-wrapper {
+  position: relative;
+}
+
+/* Actions hidden by default */
+.canvas-component-actions {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  display: flex;
+  gap: 6px;
+
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.95);
+  transition: all 0.15s ease-in-out;
+}
+
+/* Show actions ONLY when hovered AND selected */
+.canvas-component-selected:hover .canvas-component-actions {
+  opacity: 1;
+  pointer-events: auto;
+  transform: scale(1);
+}
+
+/* Optional nice styling */
+.canvas-component-actions button {
+  background: #5c95df91;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}

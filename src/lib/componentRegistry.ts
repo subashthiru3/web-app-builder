@@ -1,9 +1,16 @@
-import { ComponentType, DEFAULT_MWL_BUTTON_PROPS, DEFAULT_MWL_GRID_PROPS } from "./types";
+import React from "react";
+import {
+  ComponentType,
+  DEFAULT_MWL_BUTTON_PROPS,
+  DEFAULT_MWL_GRID_PROPS,
+} from "./types";
+import { RxButton } from "react-icons/rx";
+import { CiViewTable } from "react-icons/ci";
 
 export interface ComponentSchema {
   type: ComponentType;
   label: string;
-  icon: string;
+  icon: React.ReactNode | string;
   defaultProps: any;
   editableFields: string[];
 }
@@ -12,7 +19,7 @@ export const componentRegistry: Record<ComponentType, ComponentSchema> = {
   mwlButton: {
     type: "mwlButton",
     label: "MWL Button",
-    icon: "SmartButton",
+    icon: React.createElement(RxButton),
     defaultProps: DEFAULT_MWL_BUTTON_PROPS,
     editableFields: [
       "text",
@@ -29,7 +36,7 @@ export const componentRegistry: Record<ComponentType, ComponentSchema> = {
   mwlGrid: {
     type: "mwlGrid",
     label: "MWL Grid",
-    icon: "GridOn",
+    icon: React.createElement(CiViewTable),
     defaultProps: DEFAULT_MWL_GRID_PROPS,
     editableFields: [
       "rowData",

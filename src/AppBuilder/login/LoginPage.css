@@ -1,0 +1,371 @@
+/* Container Styles */
+.loginPage-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  height: 100vh;
+  background: white;
+  padding: 0;
+  font-family: "Roboto", "Helvetica", "Arial", sans-serif;
+  gap: 0;
+  overflow: hidden;
+}
+
+.loginPage-left {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px;
+}
+
+.loginPage-logo-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 30px;
+  color: white;
+  text-align: center;
+}
+
+.loginPage-logo-section h1 {
+  font-size: 48px;
+  font-weight: 700;
+  margin: 0;
+  color: white;
+}
+
+.loginPage-logo-section p {
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.8);
+  max-width: 300px;
+}
+
+.loginPage-right {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  border-left: 1px solid #e0e0e0;
+  padding: 20px 40px;
+  overflow-y: auto;
+  position: relative;
+  z-index: 1;
+}
+
+.loginPage-right::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url("/network.jpg") center/cover no-repeat;
+  filter: blur(3px);
+  z-index: -1;
+}
+
+.loginPage-content {
+  width: 100%;
+  max-width: 450px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Card Styles */
+.loginPage-card {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  transition: box-shadow 0.3s ease;
+}
+
+.loginPage-card:hover {
+  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.2);
+}
+
+/* Header Styles */
+.loginPage-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.loginPage-logo-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 70px;
+  height: 70px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 50%;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.loginPage-logo-icon svg {
+  color: white;
+}
+
+.loginPage-title {
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+/* Form Styles */
+.loginPage-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.loginPage-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.loginPage-form-field .MuiTextField-root {
+  height: 56px;
+}
+
+.loginPage-input {
+  transition: all 0.3s ease;
+}
+
+.loginPage-input .MuiOutlinedInput-root {
+  border-radius: 8px;
+  background: #f5f5f5;
+  transition: background 0.3s ease;
+}
+
+.loginPage-input .MuiOutlinedInput-root:hover {
+  background: #f0f0f0;
+}
+
+.loginPage-input .MuiOutlinedInput-root.Mui-focused {
+  background: white;
+}
+
+/* Form Options */
+.loginPage-form-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 8px 0;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.loginPage-form-options .MuiFormControlLabel-root {
+  margin: 0;
+  flex: 1;
+  min-width: 150px;
+}
+
+/* Submit Button */
+.loginPage-submit-btn {
+  height: 48px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0.5px;
+  transition: all 0.3s ease;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  margin-top: 12px;
+}
+
+.loginPage-submit-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+}
+
+.loginPage-submit-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.loginPage-submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Errors */
+.loginPage-errors {
+  margin-bottom: 20px;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.loginPage-errors .MuiAlert-root {
+  border-radius: 8px;
+  border-left: 4px solid;
+}
+
+/* Demo Info Box */
+.loginPage-demo-info {
+  background: #f0f4ff;
+  border-left: 4px solid #667eea;
+  padding: 15px;
+  border-radius: 8px;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+/* Footer */
+.loginPage-footer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  border-top: 1px solid #eee;
+  padding-top: 20px;
+  margin-top: 20px;
+}
+
+.loginPage-footer .MuiButton-root {
+  font-weight: 600;
+  text-transform: none;
+}
+
+/* Info Box */
+.loginPage-info-box {
+  text-align: center;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .loginPage-container {
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .loginPage-left,
+  .loginPage-right {
+    flex: none;
+    min-height: auto;
+  }
+
+  .loginPage-logo-section h1 {
+    font-size: 36px;
+  }
+}
+
+@media (max-width: 600px) {
+  .loginPage-container {
+    padding: 15px;
+    min-height: 100vh;
+  }
+
+  .loginPage-content {
+    max-width: 100%;
+  }
+
+  .loginPage-form-options {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .loginPage-form-options .MuiFormControlLabel-root {
+    min-width: 100%;
+  }
+
+  .loginPage-logo-icon {
+    width: 60px;
+    height: 60px;
+  }
+
+  .loginPage-logo-icon svg {
+    font-size: 30px;
+  }
+
+  .loginPage-title {
+    font-size: 24px;
+  }
+
+  .loginPage-logo-section h1 {
+    font-size: 28px;
+  }
+
+  .loginPage-logo-section p {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 400px) {
+  .loginPage-submit-btn {
+    height: 44px;
+    font-size: 14px;
+  }
+
+  .loginPage-form-field .MuiTextField-root {
+    height: 48px;
+  }
+
+  .loginPage-title {
+    font-size: 20px;
+  }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  .loginPage-card {
+    background: #1e1e1e;
+  }
+
+  .loginPage-title,
+  .loginPage-form-field .MuiInputBase-input {
+    color: #fff;
+  }
+
+  .loginPage-input .MuiOutlinedInput-root {
+    background: #2d2d2d;
+  }
+
+  .loginPage-input .MuiOutlinedInput-root:hover {
+    background: #333;
+  }
+
+  .loginPage-demo-info {
+    background: #2d3748;
+    border-left-color: #667eea;
+  }
+
+  .loginPage-footer {
+    border-top-color: #333;
+  }
+}

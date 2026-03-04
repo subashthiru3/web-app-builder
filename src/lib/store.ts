@@ -1,45 +1,128 @@
-'use client';
+"use client";
 
-import { create } from 'zustand';
-import { CanvasComponent, CanvasState, ComponentType, ComponentProps } from './types';
-import { getComponentSchema } from './componentRegistry';
+import { create } from "zustand";
+import { CanvasComponent, ComponentType, ComponentProps } from "./types";
+import { getComponentSchema } from "./componentRegistry";
+import * as pagesStoreModule from "./pagesStore";
 
-interface BuilderStore extends CanvasState {
-  undoStack: Array<{ components: CanvasComponent[]; selectedComponentId: string | null }>;
-  redoStack: Array<{ components: CanvasComponent[]; selectedComponentId: string | null }>;
-  addComponent: (type: ComponentType) => void;
-  removeComponent: (id: string) => void;
-  selectComponent: (id: string | null) => void;
-  updateComponentProps: (id: string, props: Partial<ComponentProps>) => void;
-  reorderComponents: (fromIndex: number, toIndex: number) => void;
-  duplicateComponent: (id: string) => void;
-  exportJSON: () => string;
-  importJSON: (json: string) => void;
-  undo: () => void;
-  redo: () => void;
+export interface CanvasSettings {
+  columns: number;
+  width: string;
+  padding: string;
+  backgroundColor: string;
+  border: boolean;
+  borderColor: string;
+  borderSize: string;
+  borderRadius: string;
+  shadow: boolean;
+  visibility: string;
 }
 
-// Simple UUID generation without external library
+export interface BuilderStore {
+  canvasSettings: CanvasSettings;
+  setCanvasSettings: (settings: Partial<CanvasSettings>) => void;
+  componentsByPage: {
+    [pageId: number]: {
+      id: number;
+      name: string;
+      components: CanvasComponent[];
+    };
+  };
+  selectedComponentId: string | null;
+  undoStack: { [pageId: number]: CanvasComponent[][] };
+  redoStack: { [pageId: number]: CanvasComponent[][] };
+
+  addComponent: (type: ComponentType, pageId: number) => void;
+  removeComponent: (id: string, pageId: number) => void;
+  selectComponent: (id: string | null) => void;
+  updateComponentProps: (
+    id: string,
+    props: Partial<ComponentProps>,
+    pageId: number,
+  ) => void;
+  updateComponentWidth: (id: string, width: string, pageId: number) => void;
+  updateComponentHeight: (id: string, height: string, pageId: number) => void;
+  reorderComponents: (
+    fromIndex: number,
+    toIndex: number,
+    pageId: number,
+  ) => void;
+  duplicateComponent: (id: string, pageId: number) => void;
+
+  exportJSON: (pageId: number) => string;
+  importJSON: (json: string, pageId: number) => void;
+
+  exportProjectJSON: (projectName: string) => string;
+  importProjectJSON: (json: string) => void;
+
+  undo: (pageId: number) => void;
+  redo: (pageId: number) => void;
+
+  selectedView: string;
+  setSelectedView: (view: string) => void;
+
+  selectedSubView: string;
+  setSelectedSubView: (subView: string) => void;
+
+  sideDrawerOpen: boolean;
+  setSideDrawerOpen: (open: boolean) => void;
+
+  selectedTab: number;
+  selectedTabLabel: string;
+  setSelectedTab: (idx: number, label?: string) => void;
+
+  deployStatus: string;
+  setDeployStatus: (status: string) => void;
+}
+
+// Simple ID generator
 const generateId = () => Math.random().toString(36).substr(2, 9);
 
-// Load initial state from localStorage if available
-const getInitialComponents = () => {
-  if (typeof window !== 'undefined') {
-    try {
-      const stored = localStorage.getItem('wab_components');
-      if (stored) return JSON.parse(stored);
-    } catch {}
-  }
-  return [];
+const defaultCanvasSettings: CanvasSettings = {
+  columns: 1,
+  width: "Fill",
+  padding: "16px",
+  backgroundColor: "",
+  border: false,
+  borderColor: "#111827",
+  borderSize: "1px",
+  borderRadius: "0px",
+  shadow: false,
+  visibility: "100%",
 };
 
 export const useBuilderStore = create<BuilderStore>((set, get) => ({
-  components: getInitialComponents(),
+  canvasSettings: defaultCanvasSettings,
+  setCanvasSettings: (settings) =>
+    set((state) => ({
+      canvasSettings: { ...state.canvasSettings, ...settings },
+    })),
+  componentsByPage: {},
   selectedComponentId: null,
-  undoStack: [],
-  redoStack: [],
+  undoStack: {},
+  redoStack: {},
 
-  addComponent: (type: ComponentType) => {
+  selectedView: "Lap View",
+  setSelectedView: (view) => set({ selectedView: view }),
+
+  selectedSubView: "",
+  setSelectedSubView: (subView) => set({ selectedSubView: subView }),
+
+  sideDrawerOpen: true,
+  setSideDrawerOpen: (open) => set({ sideDrawerOpen: open }),
+
+  selectedTab: 0,
+  selectedTabLabel: "Pages",
+
+  deployStatus: "",
+  setDeployStatus: (status) => set({ deployStatus: status }),
+
+  setSelectedTab: (idx, label = "Pages") =>
+    set({ selectedTab: idx, selectedTabLabel: label }),
+
+  selectComponent: (id) => set({ selectedComponentId: id }),
+
+  addComponent: (type, pageId) => {
     set((state) => {
       const schema = getComponentSchema(type);
       const newComponent: CanvasComponent = {
@@ -47,140 +130,364 @@ export const useBuilderStore = create<BuilderStore>((set, get) => ({
         type,
         props: { ...schema.defaultProps },
       };
-      const updated = {
-        components: [...state.components, newComponent],
-        selectedComponentId: newComponent.id,
-        undoStack: [...(state.undoStack || []), { components: state.components, selectedComponentId: state.selectedComponentId }],
-        redoStack: [],
-      };
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('wab_components', JSON.stringify(updated.components));
+
+      // Try to get the page name from pagesStore if available
+      let pageName = `Page ${pageId}`;
+      try {
+        // Dynamically import to avoid circular dependency
+        import("./pagesStore")
+          .then((pagesStore) => {
+            if (pagesStore && pagesStore.usePagesStore) {
+              const pages = pagesStore.usePagesStore.getState().pages;
+              const found = pages.find(
+                (p: { id: number; name: string }) => p.id === pageId,
+              );
+              if (found && found.name) pageName = found.name;
+            }
+          })
+          .catch(() => {
+            // fallback to default name
+          });
+      } catch (e) {
+        // fallback to default name
       }
-      return updated;
+      const page = state.componentsByPage[pageId] ?? {
+        id: pageId,
+        name: pageName,
+        components: [],
+      };
+
+      return {
+        componentsByPage: {
+          ...state.componentsByPage,
+          [pageId]: {
+            ...page,
+            components: [...page.components, newComponent],
+          },
+        },
+        selectedComponentId: newComponent.id,
+        undoStack: {
+          ...state.undoStack,
+          [pageId]: [...(state.undoStack[pageId] || []), page.components],
+        },
+        redoStack: {
+          ...state.redoStack,
+          [pageId]: [],
+        },
+      };
     });
   },
 
-  removeComponent: (id: string) => {
+  removeComponent: (id, pageId) => {
     set((state) => {
-      const updated = {
-        components: state.components.filter((c) => c.id !== id),
+      const page = state.componentsByPage[pageId];
+      if (!page) return state;
+
+      return {
+        componentsByPage: {
+          ...state.componentsByPage,
+          [pageId]: {
+            ...page,
+            components: page.components.filter((c) => c.id !== id),
+          },
+        },
         selectedComponentId:
           state.selectedComponentId === id ? null : state.selectedComponentId,
-        undoStack: [...(state.undoStack || []), { components: state.components, selectedComponentId: state.selectedComponentId }],
-        redoStack: [],
+        undoStack: {
+          ...state.undoStack,
+          [pageId]: [...(state.undoStack[pageId] || []), page.components],
+        },
+        redoStack: {
+          ...state.redoStack,
+          [pageId]: [],
+        },
       };
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('wab_components', JSON.stringify(updated.components));
-      }
-      return updated;
     });
   },
 
-  selectComponent: (id: string | null) => {
-    set({ selectedComponentId: id });
-  },
-
-  updateComponentProps: (id: string, props: Partial<ComponentProps>) => {
+  updateComponentProps: (id, props, pageId) => {
     set((state) => {
-      const updated = {
-        components: state.components.map((c) =>
-          c.id === id ? { ...c, props: { ...c.props, ...props } } : c
-        ),
-        undoStack: [...(state.undoStack || []), { components: state.components, selectedComponentId: state.selectedComponentId }],
-        redoStack: [],
-      };
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('wab_components', JSON.stringify(updated.components));
-      }
-      return updated;
-    });
-  },
+      const page = state.componentsByPage[pageId];
+      if (!page) return state;
 
-  reorderComponents: (fromIndex: number, toIndex: number) => {
-    set((state) => {
-      const newComponents = [...state.components];
-      const [removed] = newComponents.splice(fromIndex, 1);
-      newComponents.splice(toIndex, 0, removed);
       return {
-        components: newComponents,
-        undoStack: [...(state.undoStack || []), { components: state.components, selectedComponentId: state.selectedComponentId }],
-        redoStack: [],
+        componentsByPage: {
+          ...state.componentsByPage,
+          [pageId]: {
+            ...page,
+            components: page.components.map((c) =>
+              c.id === id ? { ...c, props: { ...c.props, ...props } } : c,
+            ),
+          },
+        },
+        undoStack: {
+          ...state.undoStack,
+          [pageId]: [...(state.undoStack[pageId] || []), page.components],
+        },
+        redoStack: {
+          ...state.redoStack,
+          [pageId]: [],
+        },
       };
     });
   },
 
-  duplicateComponent: (id: string) => {
+  updateComponentWidth: (id, width, pageId) => {
     set((state) => {
-      const component = state.components.find((c) => c.id === id);
-      if (!component) return state;
-      const newComponent: CanvasComponent = {
-        ...component,
-        id: generateId(),
-      };
-      const updated = {
-        components: [...state.components, newComponent],
-        selectedComponentId: newComponent.id,
-        undoStack: [...(state.undoStack || []), { components: state.components, selectedComponentId: state.selectedComponentId }],
-        redoStack: [],
-      };
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('wab_components', JSON.stringify(updated.components));
-      }
-      return updated;
-    });
-  },
-  undo: () => {
-    set((state) => {
-      if (!state.undoStack || state.undoStack.length === 0) return state;
-      const prev = state.undoStack[state.undoStack.length - 1];
-      const newUndoStack = state.undoStack.slice(0, -1);
-      const newRedoStack = [...(state.redoStack || []), { components: state.components, selectedComponentId: state.selectedComponentId }];
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('wab_components', JSON.stringify(prev.components));
-      }
+      const page = state.componentsByPage[pageId];
+      if (!page) return state;
+
       return {
-        ...state,
-        components: prev.components,
-        selectedComponentId: prev.selectedComponentId,
-        undoStack: newUndoStack,
-        redoStack: newRedoStack,
+        componentsByPage: {
+          ...state.componentsByPage,
+          [pageId]: {
+            ...page,
+            components: page.components.map((c) =>
+              c.id === id ? { ...c, width } : c,
+            ),
+          },
+        },
+        undoStack: {
+          ...state.undoStack,
+          [pageId]: [...(state.undoStack[pageId] || []), page.components],
+        },
+        redoStack: {
+          ...state.redoStack,
+          [pageId]: [],
+        },
       };
     });
   },
 
-  redo: () => {
+  updateComponentHeight: (id, height, pageId) => {
     set((state) => {
-      if (!state.redoStack || state.redoStack.length === 0) return state;
-      const next = state.redoStack[state.redoStack.length - 1];
-      const newRedoStack = state.redoStack.slice(0, -1);
-      const newUndoStack = [...(state.undoStack || []), { components: state.components, selectedComponentId: state.selectedComponentId }];
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('wab_components', JSON.stringify(next.components));
-      }
+      const page = state.componentsByPage[pageId];
+      if (!page) return state;
+
       return {
-        ...state,
-        components: next.components,
-        selectedComponentId: next.selectedComponentId,
-        undoStack: newUndoStack,
-        redoStack: newRedoStack,
+        componentsByPage: {
+          ...state.componentsByPage,
+          [pageId]: {
+            ...page,
+            components: page.components.map((c) =>
+              c.id === id ? { ...c, height } : c,
+            ),
+          },
+        },
+        undoStack: {
+          ...state.undoStack,
+          [pageId]: [...(state.undoStack[pageId] || []), page.components],
+        },
+        redoStack: {
+          ...state.redoStack,
+          [pageId]: [],
+        },
       };
     });
   },
 
-  exportJSON: () => {
-    const { components } = get();
-    return JSON.stringify(components, null, 2);
+  reorderComponents: (fromIndex, toIndex, pageId) => {
+    set((state) => {
+      const page = state.componentsByPage[pageId];
+      if (!page) return state;
+
+      const updated = [...page.components];
+      const [moved] = updated.splice(fromIndex, 1);
+      updated.splice(toIndex, 0, moved);
+
+      return {
+        componentsByPage: {
+          ...state.componentsByPage,
+          [pageId]: { ...page, components: updated },
+        },
+        undoStack: {
+          ...state.undoStack,
+          [pageId]: [...(state.undoStack[pageId] || []), page.components],
+        },
+        redoStack: {
+          ...state.redoStack,
+          [pageId]: [],
+        },
+      };
+    });
   },
 
-  importJSON: (json: string) => {
+  duplicateComponent: (id, pageId) => {
+    set((state) => {
+      const page = state.componentsByPage[pageId];
+      if (!page) return state;
+
+      const comp = page.components.find((c) => c.id === id);
+      if (!comp) return state;
+
+      const cloned = { ...comp, id: generateId() };
+
+      return {
+        componentsByPage: {
+          ...state.componentsByPage,
+          [pageId]: {
+            ...page,
+            components: [...page.components, cloned],
+          },
+        },
+        selectedComponentId: cloned.id,
+        undoStack: {
+          ...state.undoStack,
+          [pageId]: [...(state.undoStack[pageId] || []), page.components],
+        },
+        redoStack: {
+          ...state.redoStack,
+          [pageId]: [],
+        },
+      };
+    });
+  },
+
+  undo: (pageId) => {
+    set((state) => {
+      const undoStack = state.undoStack[pageId] || [];
+      if (!undoStack.length) return state;
+
+      const previous = undoStack[undoStack.length - 1];
+      const page = state.componentsByPage[pageId];
+
+      return {
+        componentsByPage: {
+          ...state.componentsByPage,
+          [pageId]: { ...page, components: previous },
+        },
+        undoStack: {
+          ...state.undoStack,
+          [pageId]: undoStack.slice(0, -1),
+        },
+        redoStack: {
+          ...state.redoStack,
+          [pageId]: [...(state.redoStack[pageId] || []), page.components],
+        },
+      };
+    });
+  },
+
+  redo: (pageId) => {
+    set((state) => {
+      const redoStack = state.redoStack[pageId] || [];
+      if (!redoStack.length) return state;
+
+      const next = redoStack[redoStack.length - 1];
+      const page = state.componentsByPage[pageId];
+
+      return {
+        componentsByPage: {
+          ...state.componentsByPage,
+          [pageId]: { ...page, components: next },
+        },
+        undoStack: {
+          ...state.undoStack,
+          [pageId]: [...(state.undoStack[pageId] || []), page.components],
+        },
+        redoStack: {
+          ...state.redoStack,
+          [pageId]: redoStack.slice(0, -1),
+        },
+      };
+    });
+  },
+
+  exportJSON: (pageId) =>
+    JSON.stringify(get().componentsByPage[pageId], null, 2),
+
+  importJSON: (json, pageId) => {
     try {
-      const components = JSON.parse(json) as CanvasComponent[];
-      set({ components, selectedComponentId: null });
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('wab_components', JSON.stringify(components));
+      const pageObj = JSON.parse(json);
+      set((state) => ({
+        componentsByPage: {
+          ...state.componentsByPage,
+          [pageId]: pageObj,
+        },
+        selectedComponentId: null,
+      }));
+    } catch (e) {
+      console.error("Failed to import page JSON", e);
+    }
+  },
+
+  exportProjectJSON: (projectName) => {
+    const componentsByPage = get().componentsByPage;
+    let pagesStorePages: { id: number; name: string }[] = [];
+    try {
+      // Dynamically import to avoid circular dependency
+      // const pagesStoreModule = require("./pagesStore");
+      if (pagesStoreModule && pagesStoreModule.usePagesStore) {
+        pagesStorePages = pagesStoreModule.usePagesStore.getState().pages;
       }
-    } catch (error) {
-      console.error('Failed to import JSON:', error);
+    } catch {}
+
+    const pages = Object.values(componentsByPage).map((page) => {
+      // Try to get the latest name from pagesStore
+      const found = pagesStorePages.find((p) => p.id === page.id);
+      return {
+        ...page,
+        name: found && found.name ? found.name : page.name,
+      };
+    });
+    return JSON.stringify({ projectName, pages }, null, 2);
+  },
+
+  importProjectJSON: (json) => {
+    try {
+      const project = JSON.parse(json);
+      if (!Array.isArray(project.pages)) return;
+
+      const componentsByPage: BuilderStore["componentsByPage"] = {};
+      const pagesForStore: { id: number; name: string }[] = [];
+      let maxPageId = 0;
+      project.pages.forEach((page: any) => {
+        componentsByPage[page.id] = {
+          id: page.id,
+          name: page.name,
+          components: page.components || [],
+        };
+        pagesForStore.push({ id: page.id, name: page.name });
+        if (typeof page.id === "number" && page.id > maxPageId) {
+          maxPageId = page.id;
+        }
+      });
+
+      set({
+        componentsByPage,
+        selectedComponentId: null,
+        undoStack: {},
+        redoStack: {},
+      });
+
+      // Update pages in usePagesStore and set nextPageId
+      try {
+        import("./pagesStore")
+          .then(({ usePagesStore, setNextPageId }) => {
+            if (usePagesStore) {
+              usePagesStore.setState({
+                pages: pagesForStore,
+                activePageId:
+                  pagesForStore.length > 0 ? pagesForStore[0].id : 0,
+              });
+            }
+            if (typeof setNextPageId === "function") {
+              setNextPageId(maxPageId + 1);
+            }
+          })
+          .catch((e) => {
+            // eslint-disable-next-line no-console
+            console.error(
+              "Failed to update pagesStore from importProjectJSON",
+              e,
+            );
+          });
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.error("Failed to update pagesStore from importProjectJSON", e);
+      }
+    } catch (e) {
+      console.error("Failed to import project JSON", e);
     }
   },
 }));
