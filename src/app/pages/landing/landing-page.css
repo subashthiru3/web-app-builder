@@ -1,0 +1,19 @@
+.landing-container {
+  background-color: #f2f5fa;
+}
+
+.subheader {
+  background-color: #ffffff;
+  height: 3.125rem;
+  padding: 0.5rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 400;
+  color: #212121;
+  line-height: 1.33rem;
+}
