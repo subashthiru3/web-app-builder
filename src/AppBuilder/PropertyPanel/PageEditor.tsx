@@ -1,7 +1,6 @@
 import React, { useMemo, useState } from "react";
 import {
   Box,
-  Button,
   Typography,
   FormControl,
   InputLabel,
@@ -38,8 +37,6 @@ const PageEditor = () => {
     );
   }
 
-  const pageComponentCount =
-    componentsByPage[selectedPage.id]?.components.length ?? 0;
   const pageName = editedPageNames[selectedPage.id] ?? selectedPage.name;
   const description =
     editedDescription[selectedPage.id] ?? selectedPage.description;

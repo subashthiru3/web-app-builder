@@ -60,13 +60,9 @@ export const Canvas: React.FC = () => {
   } = useBuilderStore();
   const selectedView = useBuilderStore((state) => state.selectedView);
   const selectedSubView = useBuilderStore((state) => state.selectedSubView);
-  const { pages, activePageId, addPage, setActivePage } = usePagesStore();
+  const { pages, activePageId } = usePagesStore();
 
-  console.log("selectedSubView:", selectedSubView, selectedView);
-
-  // const selectedTabLabel = useBuilderStore((state) => state.selectedTabLabel);
   // Page functionality removed
-
   const dropEnabled = pages.length > 0 && activePageId !== 0;
   const [{ isOver }, drop] = useDrop(
     () => ({

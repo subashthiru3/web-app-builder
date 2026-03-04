@@ -17,7 +17,6 @@ import { PiExportBold } from "react-icons/pi";
 import { AiOutlineDeploymentUnit } from "react-icons/ai";
 import { LuCopy } from "react-icons/lu";
 import { usePagesStore } from "@/lib/pagesStore";
-import { GrDeploy } from "react-icons/gr";
 import { MWLSelectField } from "react-web-white-label";
 import {
   saveData,

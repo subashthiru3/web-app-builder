@@ -148,8 +148,9 @@ export const useBuilderStore = create<BuilderStore>((set, get) => ({
           .catch(() => {
             // fallback to default name
           });
-      } catch (e) {
+      } catch (err) {
         // fallback to default name
+        console.error("Failed to get page name from pagesStore", err);
       }
       const page = state.componentsByPage[pageId] ?? {
         id: pageId,
@@ -475,19 +476,22 @@ export const useBuilderStore = create<BuilderStore>((set, get) => ({
               setNextPageId(maxPageId + 1);
             }
           })
-          .catch((e) => {
+          .catch((err) => {
             // eslint-disable-next-line no-console
             console.error(
               "Failed to update pagesStore from importProjectJSON",
-              e,
+              err,
             );
           });
-      } catch (e) {
+      } catch (err) {
         // eslint-disable-next-line no-console
-        console.error("Failed to update pagesStore from importProjectJSON", e);
+        console.error(
+          "Failed to update pagesStore from importProjectJSON",
+          err,
+        );
       }
-    } catch (e) {
-      console.error("Failed to import project JSON", e);
+    } catch (err) {
+      console.error("Failed to import project JSON", err);
     }
   },
 }));

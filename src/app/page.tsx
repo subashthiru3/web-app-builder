@@ -14,7 +14,7 @@ const AppBuilder = dynamicImport(() => import("@/AppBuilder/AppBuilder"), {
 
 export default function Home() {
   const deployStatus = useBuilderStore((state) => state.deployStatus);
-  const { isAuthenticated, isLoading } = useAuthStore();
+  const { isAuthenticated } = useAuthStore();
 
   return (
     <>
