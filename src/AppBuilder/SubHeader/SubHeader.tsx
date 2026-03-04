@@ -1,4 +1,4 @@
-import React, { FC, useState, useCallback, memo } from "react";
+import React, { FC, useState, useCallback, memo, useMemo } from "react";
 import Tooltip from "@mui/material/Tooltip";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
@@ -19,11 +19,35 @@ import { PiExportBold } from "react-icons/pi";
 import { usePagesStore } from "@/lib/pagesStore";
 import { deployApp, saveData } from "@/api";
 import { GrDeploy } from "react-icons/gr";
+import { MWLSelectField } from "react-web-white-label";
 
 // Constants
 const ICON_COLOR = "#757575";
 const DISABLED_COLOR = "#BDBDBD";
 const PROJECT_NAME = "My Project";
+
+const MOBILE_RESOLUTION_OPTIONS = [
+  { id: "mobile-360x640", title: "Android Small" },
+  { id: "mobile-375x667", title: "iPhone SE" },
+  { id: "mobile-390x844", title: "iPhone 12/13" },
+  { id: "mobile-414x896", title: "iPhone XR/11" },
+];
+
+const TABLET_RESOLUTION_OPTIONS = [
+  { id: "tablet-768x1024", title: "iPad Mini" },
+  { id: "tablet-800x1280", title: "Android Tablet" },
+  { id: "tablet-834x1112", title: "iPad Air" },
+  { id: "tablet-1024x1366", title: "iPad Pro 12.9" },
+];
+
+const LAPTOP_RESOLUTION_OPTIONS = [
+  { id: "laptop-1280x720", title: "HD Laptop" },
+  { id: "laptop-1366x768", title: "WXGA Laptop" },
+  { id: "laptop-1440x900", title: "MacBook 13" },
+  { id: "laptop-1920x1080", title: "Full HD Laptop" },
+];
+
+type ResolutionOption = { id: string; title: string };
 
 // Removed unused VIEW_OPTIONS
 
@@ -67,6 +91,10 @@ const SubHeader: FC = () => {
   const activePageId = usePagesStore((state) => state.activePageId);
   const selectedView = useBuilderStore((state) => state.selectedView);
   const setSelectedView = useBuilderStore((state) => state.setSelectedView);
+  const selectedSubView = useBuilderStore((state) => state.selectedSubView);
+  const setSelectedSubView = useBuilderStore(
+    (state) => state.setSelectedSubView,
+  );
 
   // Dialog state for preview/edit JSON
   const [jsonDialogOpen, setJsonDialogOpen] = useState(false);
@@ -128,7 +156,7 @@ const SubHeader: FC = () => {
     document.body.appendChild(a);
     a.click();
     setTimeout(() => {
-      document.body.removeChild(a);
+      document?.body?.removeChild(a);
       URL.revokeObjectURL(url);
     }, 0);
   }, [exportProjectJSON]);
@@ -204,15 +232,91 @@ const SubHeader: FC = () => {
 
   const handleLaptopView = useCallback(() => {
     setSelectedView("Lap View");
-  }, [setSelectedView]);
+    setSelectedSubView("");
+  }, [setSelectedView, setSelectedSubView]);
 
   const handleMobileView = useCallback(() => {
     setSelectedView("Mobile View");
-  }, [setSelectedView]);
+    setSelectedSubView("");
+  }, [setSelectedView, setSelectedSubView]);
 
   const handleTabletView = useCallback(() => {
     setSelectedView("Tablet View");
-  }, [setSelectedView]);
+    setSelectedSubView("");
+  }, [setSelectedView, setSelectedSubView]);
+
+  const viewOptions = useMemo(() => {
+    if (selectedView === "Mobile View") return MOBILE_RESOLUTION_OPTIONS;
+    if (selectedView === "Tablet View") return TABLET_RESOLUTION_OPTIONS;
+    return LAPTOP_RESOLUTION_OPTIONS;
+  }, [selectedView]);
+
+  const selectedSubViewOption = useMemo(() => {
+    if (!selectedSubView) return undefined;
+
+    const matchedOption = viewOptions.find(
+      (option) =>
+        option.id === selectedSubView || option.title === selectedSubView,
+    );
+
+    if (matchedOption) return matchedOption;
+
+    return { id: selectedSubView, title: selectedSubView };
+  }, [viewOptions, selectedSubView]);
+
+  const normalizeSubViewValue = useCallback(
+    (value: unknown): string => {
+      if (typeof value === "string") {
+        const byId = viewOptions.find((option) => option.id === value);
+        if (byId) return byId.id;
+
+        const byTitle = viewOptions.find((option) => option.title === value);
+        if (byTitle) return byTitle.id;
+
+        const fromPattern = /(mobile|tablet|laptop)-\d+x\d+/i.exec(value);
+        if (fromPattern) return fromPattern[0].toLowerCase();
+
+        return "";
+      }
+
+      if (value && typeof value === "object") {
+        const eventValue = (value as { target?: { value?: string } }).target
+          ?.value;
+        if (typeof eventValue === "string") {
+          const byId = viewOptions.find((option) => option.id === eventValue);
+          if (byId) return byId.id;
+
+          const byTitle = viewOptions.find(
+            (option) => option.title === eventValue,
+          );
+          if (byTitle) return byTitle.id;
+        }
+
+        const optionValue = value as Partial<ResolutionOption>;
+
+        if (optionValue.id) return optionValue.id;
+
+        if (optionValue.title) {
+          const byTitle = viewOptions.find(
+            (option) => option.title === optionValue.title,
+          );
+          if (byTitle) return byTitle.id;
+        }
+      }
+
+      return "";
+    },
+    [viewOptions],
+  );
+
+  const handleSelectChange = useCallback(
+    (value: unknown) => {
+      const normalizedValue = normalizeSubViewValue(value);
+      console.log("Selected resolution:", normalizedValue);
+      setSelectedSubView(normalizedValue);
+    },
+    [normalizeSubViewValue, setSelectedSubView],
+  );
 
   return (
     <div className="mwl-subheader-container">
@@ -277,6 +381,15 @@ const SubHeader: FC = () => {
                 size={20}
               />
             </IconWrapper>
+            <MWLSelectField
+              key={`${selectedView}-${selectedSubView || "none"}`}
+              options={viewOptions}
+              initialValue={selectedSubViewOption}
+              size="small"
+              selectChangeHandler={handleSelectChange}
+              placeholder="Resolution"
+              width="70px"
+            />
           </div>
           <div
             className="mwl-subheader-right-icons"
@@ -296,33 +409,29 @@ const SubHeader: FC = () => {
                 const input = document.createElement("input");
                 input.type = "file";
                 input.accept = ".json,application/json";
-                input.onchange = () => {
+                input.onchange = async () => {
                   const file = input.files?.[0];
                   if (!file) return;
-                  const reader = new FileReader();
-                  reader.onload = (event) => {
+                  try {
+                    const json = await file.text();
+                    let parsed;
                     try {
-                      const json = event.target?.result as string;
-                      let parsed;
-                      try {
-                        parsed = JSON.parse(json);
-                      } catch (error) {
-                        alert("Invalid JSON file.");
-                        console.error("Failed to parse JSON from file:", error);
-                        return;
-                      }
-                      if (parsed && Array.isArray(parsed.pages)) {
-                        importProjectJSON(json);
-                      } else {
-                        importJSON(json, 0);
-                      }
-                      setJsonText(json);
-                    } catch (err) {
+                      parsed = JSON.parse(json);
+                    } catch (error) {
                       alert("Invalid JSON file.");
-                      console.error("Failed to import JSON from file:", err);
+                      console.error("Failed to parse JSON from file:", error);
+                      return;
                     }
-                  };
-                  reader.readAsText(file);
+                    if (parsed && Array.isArray(parsed.pages)) {
+                      importProjectJSON(json);
+                    } else {
+                      importJSON(json, 0);
+                    }
+                    setJsonText(json);
+                  } catch (err) {
+                    alert("Invalid JSON file.");
+                    console.error("Failed to import JSON from file:", err);
+                  }
                 };
                 input.click();
               }}
@@ -373,11 +482,7 @@ const SubHeader: FC = () => {
             <IconWrapper onClick={handleSave} title="Save">
               <FaSave color={ICON_COLOR} size={20} />
             </IconWrapper>
-            <IconWrapper
-              disabled={deploying}
-              onClick={handleDeploy}
-              title="Deploy"
-            >
+            <IconWrapper disabled={true} onClick={handleDeploy} title="Deploy">
               <GrDeploy color={ICON_COLOR} size={20} />
             </IconWrapper>
           </div>

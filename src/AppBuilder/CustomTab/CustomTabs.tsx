@@ -1,6 +1,5 @@
-import React, { ReactNode } from "react";
+import React, { ReactNode, useMemo, useState } from "react";
 import "./CustomTabs.css";
-import { useBuilderStore } from "@/lib/store";
 
 interface Tab {
   label: string;
@@ -12,9 +11,14 @@ export interface CustomTabsProps {
   initialTab?: number;
 }
 
-const CustomTabs: React.FC<CustomTabsProps> = ({ tabs }) => {
-  const selectedTab = useBuilderStore((state) => state.selectedTab);
-  const setSelectedTab = useBuilderStore((state) => state.setSelectedTab);
+const CustomTabs: React.FC<CustomTabsProps> = ({ tabs, initialTab = 0 }) => {
+  const defaultTabIndex = useMemo(() => {
+    if (initialTab >= 0 && initialTab < tabs.length) return initialTab;
+    return 0;
+  }, [initialTab, tabs.length]);
+
+  const [selectedTab, setSelectedTab] = useState(defaultTabIndex);
+  const activeTabIndex = selectedTab < tabs.length ? selectedTab : defaultTabIndex;
 
   return (
     <div className="mui-tabs-root">
@@ -22,15 +26,15 @@ const CustomTabs: React.FC<CustomTabsProps> = ({ tabs }) => {
         {tabs.map((tab, idx) => (
           <button
             key={tab.label}
-            className={`mui-tab${selectedTab === idx ? " mui-tab-active" : ""}`}
-            onClick={() => setSelectedTab(idx, tab.label)}
+            className={`mui-tab${activeTabIndex === idx ? " mui-tab-active" : ""}`}
+            onClick={() => setSelectedTab(idx)}
             type="button"
           >
             {tab.label}
           </button>
         ))}
       </div>
-      <div className="mui-tab-panel">{tabs[selectedTab]?.content}</div>
+      <div className="mui-tab-panel">{tabs[activeTabIndex]?.content}</div>
     </div>
   );
 };

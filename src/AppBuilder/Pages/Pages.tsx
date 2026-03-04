@@ -4,7 +4,8 @@ import PagesPopup from "./PagesPopup";
 import { usePagesStore } from "@/lib/pagesStore";
 
 const Pages: React.FC = () => {
-  const { pages, activePageId, addPage, setActivePage } = usePagesStore();
+  const { pages, activePageId, addPage, setActivePage, deletePage } =
+    usePagesStore();
   const [showPopup, setShowPopup] = useState(false);
   console.log(
     "Rendering Pages component, pages:",
@@ -37,15 +38,28 @@ const Pages: React.FC = () => {
             role="button"
             aria-current={page.id === activePageId}
           >
-            {page.name}
+            <span className={styles.pageName}>{page.name}</span>
+            {page.id === activePageId && (
+              <button
+                type="button"
+                className={styles.deletePageBtn}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  deletePage(page.id);
+                }}
+                aria-label={`Delete ${page.name}`}
+              >
+                Delete
+              </button>
+            )}
           </li>
         ))}
       </ul>
       {showPopup && (
         <PagesPopup
           onClose={() => setShowPopup(false)}
-          onAdd={(name) => {
-            addPage(name);
+          onAdd={(name, description) => {
+            addPage(name, description);
             setShowPopup(false);
           }}
         />

@@ -3,17 +3,19 @@ import "./PagesPopup.css";
 
 interface PagesPopupProps {
   onClose: () => void;
-  onAdd: (pageName: string) => void;
+  onAdd: (pageName: string, description: string) => void;
 }
 
 const PagesPopup: React.FC<PagesPopupProps> = ({ onClose, onAdd }) => {
   const [pageName, setPageName] = useState("");
+  const [description, setDescription] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (pageName.trim()) {
-      onAdd(pageName.trim());
+      onAdd(pageName.trim(), description.trim());
       setPageName("");
+      setDescription("");
     }
   };
 
@@ -24,14 +26,29 @@ const PagesPopup: React.FC<PagesPopupProps> = ({ onClose, onAdd }) => {
         <input
           id="pageName"
           value={pageName}
-          onChange={e => setPageName(e.target.value)}
+          onChange={(e) => setPageName(e.target.value)}
           autoFocus
         />
+        <label htmlFor="description">Description</label>
+        <textarea
+          id="description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          rows={4}
+        />
         <div className="pages-popup-btns">
-          <button type="button" className="pages-popup-btn cancel" onClick={onClose}>
+          <button
+            type="button"
+            className="pages-popup-btn cancel"
+            onClick={onClose}
+          >
             Cancel
           </button>
-          <button type="submit" className="pages-popup-btn add" disabled={!pageName.trim()}>
+          <button
+            type="submit"
+            className="pages-popup-btn add"
+            disabled={!pageName.trim()}
+          >
             Add
           </button>
         </div>

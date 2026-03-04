@@ -26,6 +26,15 @@
 .properties-panel-header {
   padding: 1rem;
   border-bottom: 1px solid #e2e8f0;
+
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.properties-width-adjustment {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
 }
 .properties-panel-header-row {
   display: flex;
@@ -72,6 +81,12 @@
   flex: 1;
   overflow-y: auto;
   padding: 1rem;
+}
+.properties-tab-content {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 .properties-panel-fields {
   display: flex;
