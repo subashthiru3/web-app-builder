@@ -7,24 +7,29 @@ import DialogActions from "@mui/material/DialogActions";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import "./SubHeader.css";
-// Removed unused MUI and react-web-white-label icon imports
 import { useBuilderStore } from "@/lib/store";
 import { LuUndo2, LuRedo2, LuImport } from "react-icons/lu";
 import { IoMdEye } from "react-icons/io";
 import { MdOutlineLaptopMac, MdTabletAndroid } from "react-icons/md";
 import { BsFiletypeJson } from "react-icons/bs";
-// Removed unused FaFileExport, FaFileImport
 import { FaSave, FaTabletAlt } from "react-icons/fa";
 import { PiExportBold } from "react-icons/pi";
+import { AiOutlineDeploymentUnit } from "react-icons/ai";
+import { LuCopy } from "react-icons/lu";
 import { usePagesStore } from "@/lib/pagesStore";
-import { deployApp, saveData } from "@/api";
 import { GrDeploy } from "react-icons/gr";
 import { MWLSelectField } from "react-web-white-label";
+import {
+  saveData,
+  createNewProject,
+  deployCreateProjectStatus,
+  deployProject,
+} from "@/api";
+import { Toaster, toast } from "sonner";
 
 // Constants
 const ICON_COLOR = "#757575";
 const DISABLED_COLOR = "#BDBDBD";
-const PROJECT_NAME = "My Project";
 
 const MOBILE_RESOLUTION_OPTIONS = [
   { id: "mobile-360x640", title: "Android Small" },
@@ -50,9 +55,9 @@ const LAPTOP_RESOLUTION_OPTIONS = [
 type ResolutionOption = { id: string; title: string };
 
 // Removed unused VIEW_OPTIONS
+const appName = `portfolio-one`;
 
 // Reusable icon wrapper component
-
 const IconWrapper: FC<{
   onClick?: () => void;
   disabled?: boolean;
@@ -84,6 +89,7 @@ IconWrapper.displayName = "IconWrapper";
 const SubHeader: FC = () => {
   const exportProjectJSON = useBuilderStore((state) => state.exportProjectJSON);
   const [deploying, setDeploying] = useState(false);
+  const setDeployStatus = useBuilderStore((state) => state.setDeployStatus);
   const importJSON = useBuilderStore((state) => state.importJSON);
   const importProjectJSON = useBuilderStore((state) => state.importProjectJSON);
   const undo = useBuilderStore((state) => state.undo);
@@ -100,10 +106,9 @@ const SubHeader: FC = () => {
   const [jsonDialogOpen, setJsonDialogOpen] = useState(false);
   const [jsonText, setJsonText] = useState("");
   const [jsonError, setJsonError] = useState("");
-  console.log("SubHeader render start", jsonText);
   // Handler to open JSON dialog
   const handleOpenJsonDialog = useCallback(() => {
-    setJsonText(exportProjectJSON(PROJECT_NAME));
+    setJsonText(exportProjectJSON(appName));
     setJsonError("");
     setJsonDialogOpen(true);
   }, [exportProjectJSON]);
@@ -113,7 +118,6 @@ const SubHeader: FC = () => {
     setJsonDialogOpen(false);
     setJsonError("");
   }, []);
-  console.log("SubHeader rendered", jsonText);
   // Handler to save edited JSON
   const handleSaveJsonDialog = useCallback(() => {
     try {
@@ -143,11 +147,12 @@ const SubHeader: FC = () => {
       setJsonText(text);
     } catch {}
   }, []);
+
   // Handler to clear all components
   // Removed unused handleClear
   // Handler to export JSON
   const handleExportJSON = useCallback(() => {
-    const json = exportProjectJSON(PROJECT_NAME);
+    const json = exportProjectJSON(appName);
     const blob = new Blob([json], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -163,7 +168,6 @@ const SubHeader: FC = () => {
 
   // Action handlers
   // Removed unused handleSettings
-
   const handleUndo = useCallback(() => {
     if (activePageId !== undefined && activePageId !== null) {
       undo(activePageId);
@@ -176,58 +180,172 @@ const SubHeader: FC = () => {
     }
   }, [redo, activePageId]);
 
-  // Removed unused handleCopy
-
-  // Removed unused handleCut
-
-  // Removed unused handlePaste
-
-  // Commented out refresh handler
-  // const handleRefresh = useCallback(() => {
-  //   console.log("Refresh clicked");
-  //   window.location.reload();
-  // }, []);
-
-  // Removed unused handleSelectChange
-
   const handleSave = async () => {
     if (jsonText) {
-      const response = await saveData(jsonText);
+      const response = await saveData(appName, jsonText);
       if (response.status === 200) {
-        alert(response.data?.message);
+        toast.success(response.data?.message);
       }
     } else {
-      console.log("No JSON data to save");
+      toast.warning("No JSON data to save");
     }
   };
 
-  const handleDeploy = async () => {
-    try {
-      setDeploying(true);
+  const handleDeployProject = async () => {
+    setDeployStatus("in_progress");
+    const jsonString = exportProjectJSON(appName);
 
-      const jsonString = exportProjectJSON(PROJECT_NAME);
-      const json = JSON.parse(jsonString);
+    if (!jsonString) {
+      toast.warning("Nothing to deploy");
+      setDeploying(false);
+      return;
+    }
+    // ✅ 1. SAVE FIRST
+    const saveResponse = await saveData(appName, jsonString);
 
-      if (!json || json.length === 0) {
-        alert("⚠ Nothing to deploy");
-        return;
+    if (saveResponse.status !== 200) {
+      toast.error("Failed to save project");
+      setDeploying(false);
+      return;
+    } else {
+      try {
+        const res = await deployProject(appName, "azure-workout");
+        if (res.status === 200) {
+          // ✅ 2. START DEPLOYMENT
+          const deploymentId = res.data.deploymentId;
+
+          if (!deploymentId) {
+            toast.error("Failed to start deployment");
+            setDeploying(false);
+            return;
+          }
+
+          toast.info("Deployment in progress...");
+          setDeploying(true);
+
+          // ✅ 3. POLL DEPLOY STATUS
+          const interval = setInterval(async () => {
+            try {
+              const statusRes = await deployCreateProjectStatus(deploymentId);
+              const status = statusRes.data.status;
+              const azureStaticUrl = statusRes.data.azureStaticUrl;
+
+              if (status === "SUCCESS") {
+                clearInterval(interval);
+                setDeploying(false);
+                setDeployStatus("success");
+
+                const generatedUrl = `${azureStaticUrl}/preview?project=${appName}`;
+                toast.custom(
+                  (t: any) => (
+                    <div
+                      style={{
+                        background: "white",
+                        padding: "16px",
+                        borderRadius: "12px",
+                        width: "420px",
+                        boxShadow: "0 10px 30px rgba(0,0,0,0.1)",
+                      }}
+                    >
+                      <div style={{ fontWeight: 600, marginBottom: 10 }}>
+                        🎉 Deployment Successful
+                      </div>
+
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 10,
+                          background: "#f5f5f5",
+                          padding: "10px",
+                          borderRadius: 8,
+                          wordBreak: "break-all",
+                          fontSize: 13,
+                        }}
+                      >
+                        <span style={{ flex: 1 }}>{generatedUrl}</span>
+
+                        <button
+                          onClick={async () => {
+                            await navigator.clipboard.writeText(generatedUrl);
+                            toast.success("Copied to clipboard ✅");
+                          }}
+                          style={{
+                            background: "transparent",
+                            border: "none",
+                            cursor: "pointer",
+                          }}
+                        >
+                          <LuCopy size={18} />
+                        </button>
+                      </div>
+
+                      <div style={{ marginTop: 14, textAlign: "right" }}>
+                        <button
+                          onClick={() => toast.dismiss(t)}
+                          style={{
+                            background: "#111",
+                            color: "white",
+                            border: "none",
+                            padding: "6px 14px",
+                            borderRadius: 6,
+                            cursor: "pointer",
+                          }}
+                        >
+                          Close
+                        </button>
+                      </div>
+                    </div>
+                  ),
+                  {
+                    duration: Infinity, // 🔥 VERY IMPORTANT
+                  },
+                );
+              }
+
+              if (status === "FAILED") {
+                clearInterval(interval);
+                setDeploying(false);
+                setDeployStatus("failed");
+                toast.error("Deployment Failed ❌");
+              }
+            } catch (err) {
+              console.error(err);
+              clearInterval(interval);
+              setDeploying(false);
+              setDeployStatus("failed");
+              toast.error("Error checking deployment status");
+            }
+          }, 5000);
+        } else {
+          toast.error("Failed to create new project");
+        }
+      } catch (err) {
+        console.error(err);
+        toast.error("Failed to create and deploy project");
+        setDeploying(false);
+        setDeployStatus("failed");
       }
+    }
+  };
 
-      const response = await deployApp("sample-project", json);
+  const handleCreateNewProject = async () => {
+    try {
+      const res = await createNewProject(appName, "azure-workout");
+      if (res.status === 200) {
+        console.log("response from createNewProject:", res);
 
-      alert("🚀 Deployment Started in GitHub Actions!");
-      console.log(response);
+        toast.info("Project created successfully.");
+      }
     } catch (err) {
       console.error(err);
-      alert("❌ Deployment failed");
-    } finally {
-      setDeploying(false);
+      toast.error("Failed to create project");
     }
   };
 
   // Handler to open preview in new tab
   const handlePreview = useCallback(() => {
-    window.open("/preview?project=sample-project", "_blank");
+    window.open(`/preview?project=${appName}`, "_blank");
   }, []);
 
   const handleLaptopView = useCallback(() => {
@@ -321,42 +439,15 @@ const SubHeader: FC = () => {
   return (
     <div className="mwl-subheader-container">
       <div className="mwl-subheader-assets">
-        <div className="mwl-subheader-title">{PROJECT_NAME}</div>
+        <div className="mwl-subheader-title">{appName}</div>
         <div className="mwl-subheader-main-container">
           <div className="mwl-subheader-icons">
-            {/* <IconWrapper onClick={handleSettings}>
-              <IoSettingsOutline color={ICON_COLOR} size={20} />
-            </IconWrapper> */}
             <IconWrapper onClick={handleUndo} title="Undo">
               <LuUndo2 color={ICON_COLOR} size={20} />
             </IconWrapper>
             <IconWrapper onClick={handleRedo} title="Redo">
               <LuRedo2 color={ICON_COLOR} size={20} />
             </IconWrapper>
-            {/* Commented this code for suggestion */}
-            {/* <IconWrapper onClick={handleCopy}>
-              <MdContentCopy color={ICON_COLOR} size={20} />
-            </IconWrapper>
-            <IconWrapper onClick={handleCut}>
-              <IoMdCut color={ICON_COLOR} size={20} />
-            </IconWrapper>
-            <IconWrapper onClick={handlePaste} disabled={!isPasteEnabled}>
-              <MdContentPaste
-                color={isPasteEnabled ? ICON_COLOR : DISABLED_COLOR}
-                size={20}
-              />
-            </IconWrapper> */}
-            {/* <MWLSelectField
-              options={VIEW_OPTIONS}
-              size="small"
-              selectChangeHandler={handleSelectChange}
-              placeholder="Select option"
-              width="70px"
-            /> */}
-            {/* Commented this code for needed */}
-            {/* <IconWrapper onClick={handleRefresh}>
-              <MdOutlineRefresh color={ICON_COLOR} size={20} />
-            </IconWrapper>*/}
             <IconWrapper onClick={handleMobileView} title="Mobile View">
               <MdTabletAndroid
                 color={
@@ -482,12 +573,19 @@ const SubHeader: FC = () => {
             <IconWrapper onClick={handleSave} title="Save">
               <FaSave color={ICON_COLOR} size={20} />
             </IconWrapper>
-            <IconWrapper disabled={true} onClick={handleDeploy} title="Deploy">
-              <GrDeploy color={ICON_COLOR} size={20} />
-            </IconWrapper>
+            <span className={deploying ? "rotating" : ""}>
+              <IconWrapper
+                disabled={deploying}
+                onClick={handleDeployProject}
+                title="Deploy"
+              >
+                <AiOutlineDeploymentUnit size={20} />
+              </IconWrapper>
+            </span>
           </div>
         </div>
       </div>
+      <Toaster richColors position="top-center" closeButton />
     </div>
   );
 };

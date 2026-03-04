@@ -70,6 +70,9 @@ export interface BuilderStore {
   selectedTab: number;
   selectedTabLabel: string;
   setSelectedTab: (idx: number, label?: string) => void;
+
+  deployStatus: string;
+  setDeployStatus: (status: string) => void;
 }
 
 // Simple ID generator
@@ -110,6 +113,10 @@ export const useBuilderStore = create<BuilderStore>((set, get) => ({
 
   selectedTab: 0,
   selectedTabLabel: "Pages",
+
+  deployStatus: "",
+  setDeployStatus: (status) => set({ deployStatus: status }),
+
   setSelectedTab: (idx, label = "Pages") =>
     set({ selectedTab: idx, selectedTabLabel: label }),
 
