@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import "react-web-white-label/dist/app/global.css";
 import Home from "./page";
+import { AuthProvider } from "@/lib/AuthProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,7 +28,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        <Home>{children}</Home>
+        <AuthProvider>
+          <Home>{children}</Home>
+        </AuthProvider>
       </body>
     </html>
   );

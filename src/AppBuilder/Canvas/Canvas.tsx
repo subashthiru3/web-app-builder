@@ -10,6 +10,44 @@ import { Trash2, Copy } from "lucide-react";
 import "./Canvas.css";
 import { usePagesStore } from "@/lib/pagesStore";
 
+const parseResolution = (
+  subView: string,
+): { width: number; height: number } | null => {
+  if (!subView) return null;
+
+  const idMatch = /(\d+)x(\d+)/i.exec(subView);
+  if (idMatch) {
+    return {
+      width: Number(idMatch[1]),
+      height: Number(idMatch[2]),
+    };
+  }
+
+  const titleMatch = /\((\d+)\s*x\s*(\d+)\)/i.exec(subView);
+  if (titleMatch) {
+    return {
+      width: Number(titleMatch[1]),
+      height: Number(titleMatch[2]),
+    };
+  }
+
+  return null;
+};
+
+const getEffectiveView = (selectedView: string, selectedSubView: string) => {
+  if (selectedSubView.startsWith("mobile-")) return "Mobile View";
+  if (selectedSubView.startsWith("tablet-")) return "Tablet View";
+  if (selectedSubView.startsWith("laptop-")) return "Lap View";
+  return selectedView;
+};
+
+const getCanvasClass = (view: string) => {
+  if (view === "Lap View") return "canvasFull";
+  if (view === "Mobile View") return "canvasMobile";
+  if (view === "Tablet View") return "canvasTablet";
+  return "canvasDefault";
+};
+
 export const Canvas: React.FC = () => {
   const {
     componentsByPage,
@@ -18,13 +56,13 @@ export const Canvas: React.FC = () => {
     selectComponent,
     duplicateComponent,
     removeComponent,
+    canvasSettings,
   } = useBuilderStore();
   const selectedView = useBuilderStore((state) => state.selectedView);
+  const selectedSubView = useBuilderStore((state) => state.selectedSubView);
   const { pages, activePageId } = usePagesStore();
 
-  // const selectedTabLabel = useBuilderStore((state) => state.selectedTabLabel);
   // Page functionality removed
-
   const dropEnabled = pages.length > 0 && activePageId !== 0;
   const [{ isOver }, drop] = useDrop(
     () => ({
@@ -44,10 +82,27 @@ export const Canvas: React.FC = () => {
   // Create a ref for the canvas div
   const canvasRef = React.useRef<HTMLDivElement>(null);
 
-  let canvasClass = "canvasDefault";
-  if (selectedView === "Lap View") canvasClass = "canvasFull";
-  else if (selectedView === "Mobile View") canvasClass = "canvasMobile";
-  else if (selectedView === "Tablet View") canvasClass = "canvasTablet";
+  const resolution = parseResolution(selectedSubView);
+  const effectiveView = getEffectiveView(selectedView, selectedSubView);
+  const canvasClass = getCanvasClass(effectiveView);
+
+  // Build inline style from canvasSettings
+  const canvasStyle: React.CSSProperties = {
+    padding: canvasSettings.padding,
+    backgroundColor: canvasSettings.backgroundColor || undefined,
+    border: canvasSettings.border
+      ? `${canvasSettings.borderSize} solid ${canvasSettings.borderColor}`
+      : undefined,
+    borderRadius: canvasSettings.borderRadius,
+    boxShadow: canvasSettings.shadow ? "0 2px 8px rgba(0,0,0,0.15)" : undefined,
+    opacity: canvasSettings.visibility
+      ? parseInt(canvasSettings.visibility) / 100
+      : 1,
+    width: resolution ? `${resolution.width}px` : undefined,
+    minHeight: resolution ? `${resolution.height}px` : undefined,
+    maxWidth: resolution ? "none" : undefined,
+    // width removed
+  };
 
   // Attach drop to the ref
   React.useEffect(() => {
@@ -58,9 +113,24 @@ export const Canvas: React.FC = () => {
 
   const pageComponents = (componentsByPage[activePageId]?.components ||
     []) as CanvasComponent[];
+
+  console.log("selectedComponentId:", selectedComponentId);
+
   return (
-    <div ref={canvasRef} className={`canvas ${canvasClass}`}>
-      <div className={`canvas-inner ${isOver ? "canvas-inner-over" : ""}`}>
+    <div
+      ref={canvasRef}
+      className={`canvas ${canvasClass}`}
+      style={canvasStyle}
+      onClick={() => selectComponent(null)}
+    >
+      <div
+        className={`canvas-inner ${isOver ? "canvas-inner-over" : ""}`}
+        style={{
+          display: "grid",
+          gridTemplateColumns: `repeat(${canvasSettings.columns}, 1fr)`,
+          gap: "16px",
+        }}
+      >
         {pages.length === 0 || activePageId === 0 ? (
           <div className="canvas-empty-message">
             No pages found. Please add a page to enable drag & drop.
@@ -78,7 +148,14 @@ export const Canvas: React.FC = () => {
                   ? " canvas-component-selected"
                   : ""
               }`}
-              onClick={() => selectComponent(component.id)}
+              style={{
+                width: component.width ? `${component.width}px` : "auto",
+                height: component.height ? `${component.height}px` : "auto",
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                selectComponent(component.id);
+              }}
             >
               <CanvasComponentRenderer component={component} />
               {selectedComponentId === component.id && (

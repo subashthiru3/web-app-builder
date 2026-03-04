@@ -5,66 +5,102 @@ import "../../styles/PropertiesPanel.css";
 
 import { useBuilderStore } from "@/lib/store";
 import { usePagesStore } from "@/lib/pagesStore";
-import type { CanvasComponent } from "@/lib/types";
-import type { RowData } from "@/lib/types";
+import type { CanvasComponent, RowData } from "@/lib/types";
 import { getComponentSchema } from "@/lib/componentRegistry";
 import { PropertyEditor } from "./PropertyEditor";
+import CanvasEditor from "./CanvasEditor";
+import { TextField as MuiTextField } from "@mui/material";
+import PageEditor from "./PageEditor";
+import CustomTabs from "../CustomTab/CustomTabs";
+
+const normalizeRowData = (value: unknown): RowData[] | null => {
+  if (!Array.isArray(value)) {
+    return null;
+  }
+
+  return value.map((row: RowData, idx: number) => {
+    if (row && (row.id === undefined || row.id === null || row.id === "")) {
+      return { ...row, id: idx + 1 };
+    }
+    return row;
+  });
+};
 
 export const PropertiesPanel: React.FC = () => {
-  const { activePageId } = usePagesStore();
-  const { componentsByPage, selectedComponentId, updateComponentProps } =
-    useBuilderStore();
+  const { pages, activePageId } = usePagesStore();
+  const {
+    componentsByPage,
+    selectedComponentId,
+    updateComponentProps,
+    updateComponentWidth,
+    updateComponentHeight,
+  } = useBuilderStore();
   const components = componentsByPage[activePageId]?.components || [];
   const selectedComponent = components.find(
     (c: CanvasComponent) => c.id === selectedComponentId,
   );
+  const hasPageSelected = pages.length > 0 && activePageId !== 0;
+  const schema = selectedComponent
+    ? getComponentSchema(selectedComponent.type)
+    : null;
 
-  if (!selectedComponent) {
+  if (!hasPageSelected) {
     return (
       <div className="properties-panel-root properties-panel-empty">
-        <div className="properties-panel-empty-text">
-          <p className="properties-panel-empty-title">No component selected</p>
-          <p className="properties-panel-empty-desc">
-            Select a component on the canvas to edit
-          </p>
+        <div>
+          <div>No page selected</div>
         </div>
       </div>
     );
   }
 
-  const schema = getComponentSchema(selectedComponent.type);
-
-  return (
-    <div className="properties-panel-root">
+  const propertyTabContent = selectedComponent ? (
+    <div className="properties-tab-content">
       <div className="properties-panel-header">
+        <div className="properties-width-adjustment">
+          <h3>Customized width and Height</h3>
+          <MuiTextField
+            type="number"
+            value={selectedComponent.width || ""}
+            onChange={(e) =>
+              updateComponentWidth(
+                selectedComponentId!,
+                e.target.value,
+                activePageId,
+              )
+            }
+            size="small"
+            fullWidth
+            label="Width (px)"
+            placeholder="e.g., 300"
+            slotProps={{ htmlInput: { min: 0 } }}
+          />
+        </div>
+        <MuiTextField
+          type="number"
+          value={selectedComponent.height || ""}
+          onChange={(e) =>
+            updateComponentHeight(
+              selectedComponentId!,
+              e.target.value,
+              activePageId,
+            )
+          }
+          size="small"
+          fullWidth
+          label="Height (px)"
+          placeholder="e.g., 200"
+          slotProps={{ htmlInput: { min: 0 } }}
+        />
         <div className="properties-panel-header-row">
-          <h3 className="properties-panel-title">{schema.label} Properties</h3>
-          {/* <div className="properties-panel-header-actions">
-            <button
-              onClick={() => duplicateComponent(selectedComponentId ?? "")}
-              className="properties-panel-header-btn"
-              title="Duplicate component"
-            >
-              <Copy size={18} className="properties-panel-header-icon" />
-            </button>
-            <button
-              onClick={() => removeComponent(selectedComponentId ?? "")}
-              className="properties-panel-header-btn delete"
-              title="Delete component"
-            >
-              <Trash2
-                size={18}
-                className="properties-panel-header-icon delete"
-              />
-            </button>
-          </div> */}
+          <h3 className="properties-panel-title">{schema?.label} Properties</h3>
         </div>
         <div className="properties-panel-info">ID: {selectedComponentId}</div>
       </div>
 
       <div className="properties-panel-content">
         <div className="properties-panel-fields">
-          {schema.editableFields.map((fieldName) => {
+          {schema?.editableFields.map((fieldName) => {
             const fieldValue =
               selectedComponent.props[
                 fieldName as keyof typeof selectedComponent.props
@@ -77,25 +113,13 @@ export const PropertiesPanel: React.FC = () => {
                 value={fieldValue}
                 onChange={(value) => {
                   console.log("[WAB] Updating", fieldName, "to", value);
-                  // Special handling for grid rowData to ensure unique ids and valid array
                   let newValue = value;
                   if (fieldName === "rowData") {
-                    if (Array.isArray(value)) {
-                      newValue = value.map((row: RowData, idx: number) => {
-                        if (
-                          row &&
-                          (row.id === undefined ||
-                            row.id === null ||
-                            row.id === "")
-                        ) {
-                          return { ...row, id: idx + 1 };
-                        }
-                        return row;
-                      });
-                    } else {
-                      // If not a valid array, do not update
+                    const normalizedRowData = normalizeRowData(value);
+                    if (!normalizedRowData) {
                       return;
                     }
+                    newValue = normalizedRowData;
                   }
                   updateComponentProps(
                     selectedComponentId!,
@@ -109,6 +133,34 @@ export const PropertiesPanel: React.FC = () => {
           })}
         </div>
       </div>
+    </div>
+  ) : (
+    <div className="properties-tab-content properties-panel-content">
+      <div className="properties-panel-empty-text">
+        Select a component to edit properties
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="properties-panel-root">
+      <CustomTabs
+        tabs={[
+          {
+            label: "Property",
+            content: propertyTabContent,
+          },
+          {
+            label: "Canvas",
+            content: <CanvasEditor />,
+          },
+          {
+            label: "Page",
+            content: <PageEditor />,
+          },
+        ]}
+        initialTab={0}
+      />
     </div>
   );
 };

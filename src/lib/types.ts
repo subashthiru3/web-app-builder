@@ -42,7 +42,7 @@ import {
   GridRowParams,
   GridToolbarProps,
 } from "@mui/x-data-grid";
-import { GridApiPremium } from "@mui/x-data-grid-premium/models";
+import { GridApiPremium } from "@mui/x-data-grid-premium";
 import { GridApiPro } from "@mui/x-data-grid-pro";
 
 export interface MyToolbarProps extends Partial<GridToolbarProps> {
@@ -280,6 +280,8 @@ export interface CanvasComponent {
   id: string;
   type: ComponentType;
   props: Partial<ComponentProps>;
+  width?: string;
+  height?: string;
 }
 
 export interface CanvasState {

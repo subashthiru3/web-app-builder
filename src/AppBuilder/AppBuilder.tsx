@@ -9,10 +9,12 @@ import { LeftSidebar } from "./LeftSidebar";
 import { Canvas } from "./Canvas/Canvas";
 import { PropertiesPanel } from "./PropertyPanel/PropertiesPanel";
 import { useBuilderStore } from "@/lib/store";
+import { useAuth } from "@/lib/useAuth";
 
 const AppBuilder: React.FC<AppBuilderProps> = ({}) => {
   const setSideDrawerOpen = useBuilderStore((state) => state.setSideDrawerOpen);
   const componentsByPage = useBuilderStore((state) => state.componentsByPage);
+  const { user, logout } = useAuth();
 
   // Sync all components from all pages to localStorage for preview
   useEffect(() => {
