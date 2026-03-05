@@ -9,12 +9,10 @@ import {
   TextField,
 } from "@mui/material";
 import { usePagesStore } from "@/lib/pagesStore";
-import { useBuilderStore } from "@/lib/store";
 
 const PageEditor = () => {
   const { pages, activePageId, setActivePage, updatePageName } =
     usePagesStore();
-  const { componentsByPage } = useBuilderStore();
 
   const selectedPage = useMemo(
     () => pages.find((page) => page.id === activePageId),

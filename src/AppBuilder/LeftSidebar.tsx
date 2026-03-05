@@ -6,7 +6,7 @@ import { componentRegistry } from "@/lib/componentRegistry";
 import { DraggableComponent } from "./Canvas/DraggableComponent";
 import { ChevronDown } from "lucide-react";
 import { useBuilderStore } from "@/lib/store";
-import CustomTabs from "./CustomTab/CustomTabs";
+import CustomTabs from "../app/components/CustomTab/CustomTabs";
 import Pages from "./Pages/Pages";
 // ...existing code...
 

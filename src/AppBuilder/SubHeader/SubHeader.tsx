@@ -18,13 +18,9 @@ import { AiOutlineDeploymentUnit } from "react-icons/ai";
 import { LuCopy } from "react-icons/lu";
 import { usePagesStore } from "@/lib/pagesStore";
 import { MWLSelectField } from "react-web-white-label";
-import {
-  saveData,
-  createNewProject,
-  deployCreateProjectStatus,
-  deployProject,
-} from "@/api";
+import { saveData, deployCreateProjectStatus, deployProject } from "@/api";
 import { Toaster, toast } from "sonner";
+import { useStore } from "@/store/store";
 
 // Constants
 const ICON_COLOR = "#757575";
@@ -52,9 +48,6 @@ const LAPTOP_RESOLUTION_OPTIONS = [
 ];
 
 type ResolutionOption = { id: string; title: string };
-
-// Removed unused VIEW_OPTIONS
-const appName = `portfolio-one`;
 
 // Reusable icon wrapper component
 const IconWrapper: FC<{
@@ -100,6 +93,9 @@ const SubHeader: FC = () => {
   const setSelectedSubView = useBuilderStore(
     (state) => state.setSelectedSubView,
   );
+  const { projectName: appName, description } = useStore(
+    (state) => state.projectData,
+  );
 
   // Dialog state for preview/edit JSON
   const [jsonDialogOpen, setJsonDialogOpen] = useState(false);
@@ -110,7 +106,7 @@ const SubHeader: FC = () => {
     setJsonText(exportProjectJSON(appName));
     setJsonError("");
     setJsonDialogOpen(true);
-  }, [exportProjectJSON]);
+  }, [exportProjectJSON, appName]);
 
   // Handler to close JSON dialog
   const handleCloseJsonDialog = useCallback(() => {
@@ -163,7 +159,7 @@ const SubHeader: FC = () => {
       document?.body?.removeChild(a);
       URL.revokeObjectURL(url);
     }, 0);
-  }, [exportProjectJSON]);
+  }, [exportProjectJSON, appName]);
 
   // Action handlers
   // Removed unused handleSettings
@@ -181,7 +177,7 @@ const SubHeader: FC = () => {
 
   const handleSave = async () => {
     if (jsonText) {
-      const response = await saveData(appName, jsonText);
+      const response = await saveData(appName, jsonText, description);
       if (response.status === 200) {
         toast.success(response.data?.message);
       }
@@ -200,7 +196,7 @@ const SubHeader: FC = () => {
       return;
     }
     // ✅ 1. SAVE FIRST
-    const saveResponse = await saveData(appName, jsonString);
+    const saveResponse = await saveData(appName, jsonString, description);
 
     if (saveResponse.status !== 200) {
       toast.error("Failed to save project");
@@ -328,24 +324,10 @@ const SubHeader: FC = () => {
     }
   };
 
-  const handleCreateNewProject = async () => {
-    try {
-      const res = await createNewProject(appName, "azure-workout");
-      if (res.status === 200) {
-        console.log("response from createNewProject:", res);
-
-        toast.info("Project created successfully.");
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to create project");
-    }
-  };
-
   // Handler to open preview in new tab
   const handlePreview = useCallback(() => {
     window.open(`/preview?project=${appName}`, "_blank");
-  }, []);
+  }, [appName]);
 
   const handleLaptopView = useCallback(() => {
     setSelectedView("Lap View");
