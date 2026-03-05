@@ -106,7 +106,7 @@ const SubHeader: FC = () => {
     setJsonText(exportProjectJSON(appName));
     setJsonError("");
     setJsonDialogOpen(true);
-  }, [exportProjectJSON]);
+  }, [exportProjectJSON, appName]);
 
   // Handler to close JSON dialog
   const handleCloseJsonDialog = useCallback(() => {
@@ -159,7 +159,7 @@ const SubHeader: FC = () => {
       document?.body?.removeChild(a);
       URL.revokeObjectURL(url);
     }, 0);
-  }, [exportProjectJSON]);
+  }, [exportProjectJSON, appName]);
 
   // Action handlers
   // Removed unused handleSettings
@@ -327,7 +327,7 @@ const SubHeader: FC = () => {
   // Handler to open preview in new tab
   const handlePreview = useCallback(() => {
     window.open(`/preview?project=${appName}`, "_blank");
-  }, []);
+  }, [appName]);
 
   const handleLaptopView = useCallback(() => {
     setSelectedView("Lap View");
