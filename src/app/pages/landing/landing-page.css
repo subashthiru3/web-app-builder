@@ -1,5 +1,6 @@
 .landing-container {
   background-color: #f2f5fa;
+  overflow: hidden;
 }
 
 .subheader {
@@ -31,4 +32,44 @@
   flex-direction: row;
   justify-content: flex-end;
   padding-top: 0.5rem;
+}
+
+/* Body Container */
+.body-container {
+  padding: 1rem;
+}
+
+.content-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.template-container {
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+}
+
+.title-card-container {
+  padding: 0.25rem 0.438rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.main-title {
+  font-size: 2.125rem;
+  font-weight: 400;
+  color: #212121;
+  letter-spacing: 0.016rem;
+  line-height: 1.24rem;
+}
+
+.description {
+  color: #757575;
+  font-size: 0.813rem;
+  font-weight: 400;
+  letter-spacing: 0.038rem;
+  line-height: 1.125rem;
 }

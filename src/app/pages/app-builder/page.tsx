@@ -2,7 +2,7 @@
 import React from "react";
 import dynamicImport from "next/dynamic";
 
-const AppBuilder = dynamicImport(() => import("@/AppBuilder/AppBuilder"), {
+const AppBuilder = dynamicImport(() => import("@/components/AppBuilder"), {
   ssr: false,
 });
 
