@@ -25,8 +25,8 @@ import {
   Check as CheckIcon,
 } from "@mui/icons-material";
 import { useRouter } from "next/navigation";
-import { useAuthStore, type LoginCredentials } from "../../../lib/authStore";
-import "./LoginPage.css";
+import { useAuthStore, type LoginCredentials } from "../../lib/authStore";
+import "./login-page.css";
 import Image from "next/image";
 
 interface FormErrors {

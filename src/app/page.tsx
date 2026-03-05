@@ -1,6 +1,6 @@
 "use client";
 
-import LoginPage from "@/app/pages/login/LoginPage";
+import LoginPage from "@/app/login/page";
 import { useAuthStore } from "@/lib/authStore";
 import { useBuilderStore } from "@/lib/store";
 import Loader from "../components/Loader/Loader";
