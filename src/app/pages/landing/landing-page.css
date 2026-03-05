@@ -17,3 +17,18 @@
   color: #212121;
   line-height: 1.33rem;
 }
+
+/* Project Config Container */
+.project-config-container {
+  display: flex;
+  flex-direction: column;
+  padding: 0.5rem 0rem;
+  gap: 0.5rem;
+}
+
+.project-config-action {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  padding-top: 0.5rem;
+}

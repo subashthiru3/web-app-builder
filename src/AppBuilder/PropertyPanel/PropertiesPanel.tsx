@@ -11,7 +11,7 @@ import { PropertyEditor } from "./PropertyEditor";
 import CanvasEditor from "./CanvasEditor";
 import { TextField as MuiTextField } from "@mui/material";
 import PageEditor from "./PageEditor";
-import CustomTabs from "../CustomTab/CustomTabs";
+import CustomTabs from "../../app/components/CustomTab/CustomTabs";
 
 const normalizeRowData = (value: unknown): RowData[] | null => {
   if (!Array.isArray(value)) {

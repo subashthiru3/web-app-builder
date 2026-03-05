@@ -1,18 +1,12 @@
 import React from "react";
-import { styled } from "@mui/material";
 import { MWLTopNavbar } from "react-web-white-label";
+import DrawerHeader from "../components/DrawerHeader/DrawerHeader";
 import LVLogo from "../../../public/mh-logo.svg";
-
-const DrawerHeader = styled("div")(({ theme }) => ({
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "flex-end",
-  padding: theme.spacing(0, 1),
-  marginBottom: theme.spacing(1),
-  ...theme.mixins.toolbar,
-}));
+import { useBuilderStore } from "@/lib/store";
 
 const AppLayout = ({ children }: { children: React.ReactNode }) => {
+  const setSideDrawerOpen = useBuilderStore((state) => state.setSideDrawerOpen);
+
   return (
     <>
       <MWLTopNavbar

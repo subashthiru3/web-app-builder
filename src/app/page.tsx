@@ -20,7 +20,7 @@ export default function Home({ children }: { children: React.ReactNode }) {
   return (
     <>
       {deployStatus === "in_progress" && <Loader />}
-      {isAuthenticated ? <AppBuilder /> : <LoginPage />}
+      {isAuthenticated ? <AppLayout>{children}</AppLayout> : <LoginPage />}
     </>
   );
 }
