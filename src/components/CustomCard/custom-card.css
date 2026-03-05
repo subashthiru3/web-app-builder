@@ -1,0 +1,15 @@
+.card-container {
+  background-color: #ffffff;
+  border-radius: 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.card-title {
+  font-size: 1rem;
+  font-weight: 400;
+  color: #757575;
+  letter-spacing: 0.009rem;
+  line-height: 1.5rem;
+}

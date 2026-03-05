@@ -204,7 +204,10 @@ const SubHeader: FC = () => {
       return;
     } else {
       try {
-        const res = await deployProject(appName, "azure-workout");
+        const res = await deployProject(
+          appName?.replaceAll(" ", "-").toLocaleLowerCase() || "",
+          "azure-workout",
+        );
         if (res.status === 200) {
           // ✅ 2. START DEPLOYMENT
           const deploymentId = res.data.deploymentId;
