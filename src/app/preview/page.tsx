@@ -1,10 +1,14 @@
-import { Suspense } from "react";
-import PreviewClient from "./preview-client";
+"use client";
+import PageRenderer from "@/app/preview/PageRenderer";
+import { useLocalPreview } from "@/hooks/useLocalPreview";
 
-export default function PreviewPage() {
+export default function LocalPreviewPage() {
+  const components = useLocalPreview();
+
   return (
-    <Suspense fallback={<div>Loading preview...</div>}>
-      <PreviewClient />
-    </Suspense>
+    <PageRenderer
+      components={components}
+      emptyText="No components to preview"
+    />
   );
 }

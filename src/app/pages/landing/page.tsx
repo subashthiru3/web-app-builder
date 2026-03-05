@@ -2,11 +2,11 @@
 import React from "react";
 import Grid from "@mui/material/Grid";
 import { MWLButton } from "react-web-white-label";
-import Sidepanel from "@/app/components/Sidepanel/Sidepanel";
+import Sidepanel from "@/components/Sidepanel/Sidepanel";
 
 import AddIcon from "@mui/icons-material/Add";
 import "./landing-page.css";
-import CustomTabs from "@/app/components/CustomTab/CustomTabs";
+import CustomTabs from "@/components/CustomTab/CustomTabs";
 import { LandingPageDetails } from "./constant";
 
 const LandingPage = () => {
