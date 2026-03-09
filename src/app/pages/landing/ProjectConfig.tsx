@@ -6,6 +6,7 @@ import { MWLButton, MWLDivider, MWLTextBox } from "react-web-white-label";
 import { toast, Toaster } from "sonner";
 
 const ProjectConfig = () => {
+  const [submitLoading, setSubmitLoading] = React.useState(false);
   const { projectData, updateProjectData } = useStore((state) => state);
   const router = useRouter();
 
@@ -14,6 +15,7 @@ const ProjectConfig = () => {
   };
 
   const handleCreateNewProject = async () => {
+    setSubmitLoading(true);
     try {
       const res = await createNewProject(
         projectData.projectName?.replaceAll(" ", "-").toLocaleLowerCase(),
@@ -21,6 +23,7 @@ const ProjectConfig = () => {
       );
       if (res.status === 200) {
         console.log("response from createNewProject:", res);
+        updateProjectData("urlPath", res.data.staticUrl);
 
         toast.info("Project created successfully.");
         router.push("/pages/app-builder");
@@ -28,6 +31,8 @@ const ProjectConfig = () => {
     } catch (err) {
       console.error(err);
       toast.error("Failed to create project");
+    } finally {
+      setSubmitLoading(false);
     }
   };
 
@@ -75,6 +80,8 @@ const ProjectConfig = () => {
           size="medium"
           handleClick={handleCreateNewProject}
           disabled={!projectData.projectName}
+          loading={submitLoading}
+          loadingText="Processing..."
         />
       </div>
       <Toaster richColors position="top-center" closeButton />

@@ -2,7 +2,7 @@
 
 import { create } from "zustand";
 import { CanvasComponent, ComponentType, ComponentProps } from "./types";
-import { getComponentSchema } from "./componentRegistry";
+import { getComponentSchema } from "../hooks/componentRegistry";
 import * as pagesStoreModule from "./pagesStore";
 
 export interface CanvasSettings {

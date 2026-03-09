@@ -1,6 +1,6 @@
 import React from "react";
 import { MWLTopNavbar } from "react-web-white-label";
-import DrawerHeader from "../components/DrawerHeader/DrawerHeader";
+import DrawerHeader from "../../components/DrawerHeader/DrawerHeader";
 import LVLogo from "../../../public/mh-logo.svg";
 
 const AppLayout = ({ children }: { children: React.ReactNode }) => {
