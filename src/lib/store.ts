@@ -2,7 +2,7 @@
 
 import { create } from "zustand";
 import { CanvasComponent, ComponentType, ComponentProps } from "./types";
-import { getComponentSchema } from "./componentRegistry";
+import { getComponentSchema } from "../hooks/componentRegistry";
 import * as pagesStoreModule from "./pagesStore";
 
 export interface CanvasSettings {
@@ -477,18 +477,13 @@ export const useBuilderStore = create<BuilderStore>((set, get) => ({
             }
           })
           .catch((err) => {
-            // eslint-disable-next-line no-console
-            console.error(
+            console.log(
               "Failed to update pagesStore from importProjectJSON",
               err,
             );
           });
       } catch (err) {
-        // eslint-disable-next-line no-console
-        console.error(
-          "Failed to update pagesStore from importProjectJSON",
-          err,
-        );
+        console.log("Failed to update pagesStore from importProjectJSON", err);
       }
     } catch (err) {
       console.error("Failed to import project JSON", err);

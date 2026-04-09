@@ -140,8 +140,10 @@ export const usePagesStore = create<PagesStore>((set) => ({
 
         const { [id]: removedPage, ...remainingPages } =
           builderState.componentsByPage;
-        const { [id]: removedUndo, ...remainingUndo } = builderState.undoStack;
-        const { [id]: removedRedo, ...remainingRedo } = builderState.redoStack;
+        const remainingUndo = { ...builderState.undoStack };
+        delete remainingUndo[id];
+        const remainingRedo = { ...builderState.redoStack };
+        delete remainingRedo[id];
         const selectedComponentId = builderState.selectedComponentId;
         const shouldClearSelection = removedPage?.components?.some(
           (component) => component.id === selectedComponentId,

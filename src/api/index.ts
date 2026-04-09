@@ -2,10 +2,15 @@ import axios from "axios";
 
 const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-export const saveData = async (projectName: string, data: any) => {
+export const saveData = async (
+  projectName: string,
+  data: any,
+  projectDescription: string,
+) => {
   const payload = {
     projectName: projectName,
     pageJson: data,
+    projectDescription,
   };
   try {
     const response = await axios.post(`${apiUrl}pages/save`, payload);
